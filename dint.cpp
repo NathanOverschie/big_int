@@ -7,7 +7,7 @@
 namespace bigint
 {
 
-	typedef unsigned char base;
+	typedef unsigned long long base;
 
 	using namespace std;
 
@@ -83,6 +83,8 @@ namespace bigint
 		}
 
 		void operator+=(const dint &);
+
+		void operator+=(base);
 
 		void operator-=(const dint &a)
 		{
@@ -208,18 +210,18 @@ namespace bigint
 			for (i = 0; i < min; i++)
 			{
 				dr[i] = (*dmax)[i] + (*dmin)[i] + c;
-				c = dr[i] >= (*dmax)[i] ? 0 : 1;
+				c = dr[i] >= (*dmax)[i] + c ? 0 : 1;
 			}
 
 			// second part of addition: only biggest number contributes to the result
-			for (; i < max; i++)
+			for (; i < max && c == 1; i++)
 			{
 				dr[i] = (*dmax)[i] + c;
-				c = dr[i] >= (*dmax)[i] ? 0 : 1;
+				c = dr[i] >= c ? 0 : 1;
 			}
 
 			// Optionally add carry word
-			if (c == 1)
+			if (c == 1 && i == max)
 			{
 				dr.push_back(base{1});
 			}
@@ -355,6 +357,42 @@ namespace bigint
 		return true;
 	}
 
+	void dint::operator+=(base x)
+	{
+
+		bool n = false;
+
+		size_t s = size();
+
+		if (negative)
+		{
+			x = -x;
+			negative = false;
+			n = true;
+		}
+
+		data[0] += x;
+		char c = (data[0] >= x) ? 0 : 1;
+
+		size_t i;
+
+		for (i = 1; i < s && c == 1; i++)
+		{
+			data[i] += c;
+			c = data[i] >= c ? 0 : 1;
+		}
+
+		if (c == 1 && i == s)
+		{
+			data.push_back(1);
+		}
+
+		if (n)
+		{
+			negative = true;
+		}
+	}
+
 	void dint::operator+=(const dint &a)
 	{
 		// save which one is bigger for later
@@ -378,19 +416,20 @@ namespace bigint
 			size_t i;
 			for (i = 0; i < sa; i++)
 			{
-				data[i] += a.data[i] + c;
+				base t = a.data[i];
+				data[i] += t + c;
 				// check if there was overflow
-				c = data[i] >= a.data[i] ? 0 : 1;
+				c = data[i] >= t + c ? 0 : 1;
 			}
 
-			for (; i < sb; i++)
+			for (; i < sb && c == 1; i++)
 			{
 				data[i] += c;
 				c = data[i] >= c ? 0 : 1;
 			}
 
 			// append optional carry word
-			if (c == 1)
+			if (c == 1 && i == sb)
 			{
 				data.push_back(base{1});
 			}
@@ -404,9 +443,10 @@ namespace bigint
 				char c = 0;
 				for (size_t i = 0; i < sa; i++)
 				{
-					data[i] = a.data[i] - data[i] - c;
+					base t = a.data[i];
+					data[i] = t - data[i] - c;
 					// check if there was 'under' flow
-					c = data[i] <= a.data[i] ? 0 : 1;
+					c = data[i] <= t ? 0 : 1;
 				}
 
 				// result takes the sign of the biggest number
@@ -420,12 +460,13 @@ namespace bigint
 				char c = 0;
 				for (size_t i = 0; i < sa; i++)
 				{
-					data[i] = data[i] - a.data[i] - c;
+					base t = a.data[i];
+					data[i] = data[i] - t - c;
 					// check if there was 'under' flow
-					c = data[i] <= a.data[i] ? 0 : 1;
+					c = data[i] <= t ? 0 : 1;
 				}
 
-				for (size_t i = 0; i < sb; i++)
+				for (size_t i = 0; i < sb && c == 1; i++)
 				{
 					data[i] -= c;
 					c = data[i] <= c ? 0 : 1;
@@ -489,13 +530,14 @@ using namespace bigint;
 
 int main(int argc, char const *argv[])
 {
-	dint t {{0x00, 0x58, 0x77, 0x77, 0x30, 0x01}};
+	dint f{1};
 
-	cout << t.toHexString() << endl;
+	for (base i = 1; i <= 1000000000; ++i)
+	{
+		f += i;
+	}
 
-	t = mult(t, 0x10);
-
-	cout << t.toHexString() << endl;
+	cout << f.toHexString() << endl;
 
 	return 0;
 }
