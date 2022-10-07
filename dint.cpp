@@ -498,11 +498,11 @@ namespace bigint
 		return r.str();
 	}
 
-	dint mult(const dint &a, const dint &b)
+	dint mult(const dint &a, base b)
 	{
 		dint res;
 
-		for (dint i = 0; i < b; ++i)
+		for (base i = 0; i < b; ++i)
 		{
 			res += a;
 		}
@@ -532,10 +532,11 @@ int main(int argc, char const *argv[])
 {
 	dint f{1};
 
-	for (base i = 1; i <= 1000000000; ++i)
+	for (dint i = 1; i <= 1000000; i++)
 	{
 		f += i;
 	}
+	
 
 	cout << f.toHexString() << endl;
 
