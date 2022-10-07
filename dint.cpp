@@ -8,6 +8,7 @@ namespace bigint
 {
 
 	typedef unsigned long long base;
+	typedef std::vector<base> container;
 
 	using namespace std;
 
@@ -23,10 +24,19 @@ namespace bigint
 		// data[0] is the LSB
 		// data has at least size 1
 		// the most significant word is not 0 except if the total is 0
-		vector<base> data{0};
+		container data{0};
 		bool negative{false};
 
 		void remove_leading_zeros();
+
+		/// @brief adds the two dints together, or substracts b from a.
+		/// @param a first addition argument
+		/// @param b second addition argument
+		/// @param dest the result will go into this dint
+		/// @param subtract if false will to addition if true will do substraction
+		/// @param c inital carry
+		/// @invariant \code{(c => a > b)}
+		void add(const dint &&a, const dint &&b, dint &dest, const bool substract, const bool increment);
 
 	public:
 		dint() = default;
@@ -43,13 +53,13 @@ namespace bigint
 			data[0] = arg;
 		}
 
-		dint(const vector<base> &arg)
+		dint(const container &arg)
 		{
 			data = arg;
 			remove_leading_zeros();
 		}
 
-		dint(vector<base> &&arg)
+		dint(container &&arg)
 		{
 			data = arg;
 			remove_leading_zeros();
@@ -151,13 +161,100 @@ namespace bigint
 		}
 	};
 
-	/**
-	 * @brief Add to numbers together
-	 *
-	 * @param a
-	 * @param b
-	 * @return result
-	 */
+	static const dint empty{container{}};
+
+	void dint::add(const dint &&big, const dint &&small, dint &dest, const bool substract = false, const bool increment = false)
+	{
+		// Initialize the iterators
+		auto pbig = big.data.begin();
+		auto psmall = small.data.begin();
+		auto pdest = dest.data.begin();
+
+		// Iterator for checking leading zeros for substraction
+		container::iterator pzeros;
+		bool zeros = false;
+
+		base t;
+		// Initialize the carry bit (can be one initially)
+		base c = increment ? 1 : 0;
+
+		// First part of calculation, both numbers contribute to the result
+		for (; psmall != small.data.end(); pbig++, psmall++, pdest++)
+		{
+			if (!substract)
+			{
+				t = *pbig;
+				*pdest = t + *psmall + c;
+				c = (*pdest >= t + c ? 0 : 1);
+			}
+			else
+			{
+				t = *pbig;
+				*pdest = *pbig - *psmall - c;
+				c = (*pdest <= t ? 0 : 1);
+
+				if (*pdest == 0)
+				{
+					if (!zeros)
+					{
+						pzeros = pdest;
+						zeros = true;
+					}
+				}
+				else
+				{
+					zeros = false;
+				}
+			}
+		}
+
+		// Second part of the calculation, only one number contributes to the result
+		for (; pbig != big.data.end() && (c == 1 || big != dest); pbig++, pdest++)
+		{
+			if (!substract)
+			{
+				*pdest = *pbig + c;
+				c = (*pdest >= c ? 0 : 1);
+			}
+			else
+			{
+				t = *pbig;
+				*pdest = t - c;
+				c = (*pdest <= t ? 0 : 1);
+
+				if (*pdest == 0)
+				{
+					if (!zeros)
+					{
+						pzeros = pdest;
+						zeros = true;
+					}
+				}
+				else
+				{
+					zeros = false;
+				}
+			}
+		}
+
+		if (!substract)
+		{
+			// Optionally add an extra word to store the leftover carry bit in.
+			if (c == 1 && pbig == big.data.end())
+			{
+				dest.data.push_back(base{1});
+			}
+		}
+		else
+		{
+			// Remove leading zeros
+			if (zeros)
+			{
+				dest.data.erase(pzeros, dest.data.end());
+			}
+		}
+	}
+
 	dint operator+(const dint &a, const dint &b)
 	{
 
@@ -167,8 +264,8 @@ namespace bigint
 		size_t max;
 		size_t min;
 
-		const vector<base> *dmax;
-		const vector<base> *dmin;
+		const container *dmax;
+		const container *dmin;
 		dint res;
 
 		// Assign the biggest number to max and dmax, and the smallest to min and dmin
@@ -195,10 +292,10 @@ namespace bigint
 		}
 
 		// The result vector has the size of the biggest number (possibly 1 extra word for the carry but thats done later)
-		res.data = vector<base>(max);
+		res.data = container(max);
 
 		// Create a reference to the result data
-		vector<base> &dr{res.data};
+		container &dr{res.data};
 
 		if (a.negative == b.negative)
 		{
@@ -395,9 +492,6 @@ namespace bigint
 
 	void dint::operator+=(const dint &a)
 	{
-		// save which one is bigger for later
-		bool abigger{absgrt(a, *this)};
-
 		// get the sizes
 		size_t sa = a.data.size();
 		size_t sb = data.size();
@@ -411,68 +505,19 @@ namespace bigint
 		if (a.negative == negative)
 		{
 			// Addition
-			char c = 0;
-			base t;
-			size_t i;
-			for (i = 0; i < sa; i++)
-			{
-				base t = a.data[i];
-				data[i] += t + c;
-				// check if there was overflow
-				c = data[i] >= t + c ? 0 : 1;
-			}
-
-			for (; i < sb && c == 1; i++)
-			{
-				data[i] += c;
-				c = data[i] >= c ? 0 : 1;
-			}
-
-			// append optional carry word
-			if (c == 1 && i == sb)
-			{
-				data.push_back(base{1});
-			}
+			add(move(*this), move(a), *this);
 		}
 		else
 		{
 			// Substraction
-			if (abigger)
+			if (absgrt(a, *this))
 			{
-				// a - *this
-				char c = 0;
-				for (size_t i = 0; i < sa; i++)
-				{
-					base t = a.data[i];
-					data[i] = t - data[i] - c;
-					// check if there was 'under' flow
-					c = data[i] <= t ? 0 : 1;
-				}
-
-				// result takes the sign of the biggest number
+				add(move(a), move(*this), *this, true);
 				negative = a.negative;
-
-				remove_leading_zeros();
 			}
 			else
 			{
-				// *this - a
-				char c = 0;
-				for (size_t i = 0; i < sa; i++)
-				{
-					base t = a.data[i];
-					data[i] = data[i] - t - c;
-					// check if there was 'under' flow
-					c = data[i] <= t ? 0 : 1;
-				}
-
-				for (size_t i = 0; i < sb && c == 1; i++)
-				{
-					data[i] -= c;
-					c = data[i] <= c ? 0 : 1;
-				}
-
-				// result keeps the sign of the biggest number
+				add(move(*this), move(a), *this, true);
 			}
 		}
 	}
@@ -523,7 +568,6 @@ namespace bigint
 
 		data.resize(i + 1);
 	}
-
 }
 
 using namespace bigint;
@@ -532,11 +576,10 @@ int main(int argc, char const *argv[])
 {
 	dint f{1};
 
-	for (dint i = 1; i <= 1000000; i++)
+	for (dint i = 1; i <= 10000000; i++)
 	{
 		f += i;
 	}
-	
 
 	cout << f.toHexString() << endl;
 
