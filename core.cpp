@@ -29,18 +29,66 @@ namespace bigint
         remove_leading_zeros();
     }
 
-    bool dint::operator!=(const dint &a) const
+    inline bool dint::operator!=(const dint &a) const
     {
         return !operator==(*this, a);
     }
 
-    bool dint::operator<=(const dint &a) const
+    inline bool dint::operator<=(const dint &a) const
     {
         return !operator>(*this, a);
     }
 
-    bool dint::operator>=(const dint &a) const
+    inline bool dint::operator>=(const dint &a) const
     {
         return !operator<(*this, a);
+    }
+
+    inline void dint::operator-=(const dint &a)
+    {
+        negative = !negative;
+        operator+=(a);
+        negative = !negative;
+    }
+
+    inline dint dint::operator++(int)
+    {
+        dint tmp{*this};
+        operator++();
+        return tmp;
+    }
+
+    inline dint dint::operator--(int)
+    {
+        dint tmp{*this};
+        operator--();
+        return tmp;
+    }
+
+    inline dint dint::operator-() const
+    {
+        dint res{*this};
+        res.negative = !res.negative;
+        return res;
+    }
+
+    inline size_t dint::size() const
+    {
+        return data.size();
+    }
+
+    inline base dint::front() const
+    {
+        return data.front();
+    }
+
+    inline base dint::back() const
+    {
+        return data.back();
+    }
+
+    inline bool dint::neg() const
+    {
+        return negative;
     }
 }

@@ -70,68 +70,29 @@ namespace bigint
 
 		void operator+=(base);
 
-		void operator-=(const dint &a)
-		{
-			negative = !negative;
-			operator+=(a);
-			negative = !negative;
-		}
+		void operator-=(const dint &a);
 
-		dint operator++(int)
-		{
-			dint tmp{*this};
-			operator++();
-			return tmp;
-		}
+		dint operator++(int);
 
 		dint &operator++();
 
-		dint operator--(int)
-		{
-			dint tmp{*this};
-			operator--();
-			return tmp;
-		}
+		dint operator--(int);
 
 		dint &operator--();
 
-		dint operator-() const
-		{
-			dint res{*this};
-			res.negative = !res.negative;
-			return res;
-		}
+		dint operator-() const;
 
 		~dint() = default;
 
 		string toHexString() const;
 
-		size_t size() const
-		{
-			return data.size();
-		}
+		size_t size() const;
 
-		base front() const
-		{
-			return data.front();
-		}
+		base front() const;
 
-		base back() const
-		{
-			return data.back();
-		}
+		base back() const;
 
-		bool neg() const
-		{
-			return negative;
-		}
-
-		static dint make_Nil(){
-			const container v;
-			const dint Nil{v};
-			return Nil;
-		}
-
+		bool neg() const;
 	};
 
 	extern const dint& Nil;
