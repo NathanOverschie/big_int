@@ -2,15 +2,15 @@
 
 namespace bigint
 {
-    const dint& Nil = dint::make_Nil();
+    const dint& Nil{container{{}}};
 
     dint::dint(unsigned long long arg) : data{}
     {
-        int cells = sizeof(unsigned long long) / sizeof(base);
+        int words = sizeof(unsigned long long) / sizeof(base);
 
         base t;
 
-        for (size_t i = 0; i < cells && arg != 0; i++)
+        for (size_t i = 0; i < words && arg != 0; i++)
         {
             data.push_back(static_cast<base>(arg));
             arg >>= (8 * sizeof(base));
