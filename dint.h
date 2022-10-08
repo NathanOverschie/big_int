@@ -17,6 +17,59 @@ namespace bigint
 
 	class dint
 	{
+	public:
+		dint() = default;
+		dint(const dint &) = default;
+		dint(dint &&) = default;
+		dint(unsigned long long);
+		dint(const container &);
+		dint(container &&);
+
+		~dint() = default;
+
+		dint &operator=(const dint &) = default;
+		dint &operator=(dint &&) = default;
+
+
+		bool operator!=(const dint &) const;
+		bool operator<=(const dint &) const;
+		bool operator>=(const dint &) const;
+
+		void operator+=(const dint &);
+
+		void operator+=(base);
+
+		void operator-=(const dint &);
+
+		dint operator++(int);
+
+		dint &operator++();
+
+		dint operator--(int);
+
+		dint &operator--();
+
+		dint operator-() const;
+
+		friend dint operator+(const dint &, const dint &);
+		friend dint operator+(const dint &, dint &&);
+		friend bool operator>(const dint &, const dint &);
+		friend bool operator<(const dint &, const dint &);
+		friend bool operator==(const dint &, const dint &);
+
+		friend bool absgrt(const dint &, const dint &);
+		friend bool abslst(const dint &, const dint &);
+
+
+		string toHexString() const;
+
+		size_t size() const;
+
+		base front() const;
+
+		base back() const;
+
+		bool neg() const;
 
 	private:
 		// data represents the integer in words of size base
@@ -38,110 +91,6 @@ namespace bigint
 		/// @invariant \code{(c => a > b)}
 		static void add(const dint &&a, const dint &&b, dint &dest, const bool incr);
 		static void sub(const dint &&a, const dint &&b, dint &dest, const bool decr);
-
-	public:
-		dint() = default;
-		dint(const dint &) = default;
-		dint(dint &&) = default;
-
-		dint(unsigned long long arg);
-
-		dint(const container &arg);
-
-		dint(container &&arg);
-
-		dint &operator=(const dint &) = default;
-		dint &operator=(dint &&) = default;
-
-		friend dint operator+(const dint &, const dint &);
-		friend dint operator+(const dint &, dint &&);
-
-		friend bool absgrt(const dint &, const dint &);
-		friend bool abslst(const dint &, const dint &);
-		friend bool operator>(const dint &, const dint &);
-		friend bool operator<(const dint &, const dint &);
-		friend bool operator==(const dint &, const dint &);
-
-		bool operator!=(const dint &a) const
-		{
-			return !operator==(*this, a);
-		}
-
-		bool operator<=(const dint &a) const
-		{
-			return !operator>(*this, a);
-		}
-
-		bool operator>=(const dint &a) const
-		{
-			return !operator<(*this, a);
-		}
-
-		void operator+=(const dint &);
-
-		void operator+=(base);
-
-		void operator-=(const dint &a)
-		{
-			negative = !negative;
-			operator+=(a);
-			negative = !negative;
-		}
-
-		dint operator++(int)
-		{
-			dint tmp{*this};
-			operator++();
-			return tmp;
-		}
-
-		dint &operator++();
-
-		dint operator--(int)
-		{
-			dint tmp{*this};
-			operator--();
-			return tmp;
-		}
-
-		dint &operator--();
-
-		dint operator-() const
-		{
-			dint res{*this};
-			res.negative = !res.negative;
-			return res;
-		}
-
-		~dint() = default;
-
-		string toHexString() const;
-
-		size_t size() const
-		{
-			return data.size();
-		}
-
-		base front() const
-		{
-			return data.front();
-		}
-
-		base back() const
-		{
-			return data.back();
-		}
-
-		bool neg() const
-		{
-			return negative;
-		}
-
-		static dint make_Nil(){
-			const container v;
-			const dint Nil{v};
-			return Nil;
-		}
 
 	};
 
