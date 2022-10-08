@@ -576,7 +576,7 @@ int main(int argc, char const *argv[])
 {
 	dint f{1};
 
-	for (dint i = 1; i <= 10000000; i++)
+	for (dint i = 1; i <= 1000000; i++)
 	{
 		f += i;
 	}

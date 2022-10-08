@@ -62,20 +62,9 @@ namespace bigint
 		friend bool operator<(const dint &, const dint &);
 		friend bool operator==(const dint &, const dint &);
 
-		bool operator!=(const dint &a) const
-		{
-			return !operator==(*this, a);
-		}
-
-		bool operator<=(const dint &a) const
-		{
-			return !operator>(*this, a);
-		}
-
-		bool operator>=(const dint &a) const
-		{
-			return !operator<(*this, a);
-		}
+		bool operator!=(const dint &a) const;
+		bool operator<=(const dint &a) const;
+		bool operator>=(const dint &a) const;
 
 		void operator+=(const dint &);
 

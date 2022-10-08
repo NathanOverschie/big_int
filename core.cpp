@@ -2,7 +2,7 @@
 
 namespace bigint
 {
-    const dint& Nil{container{{}}};
+    const dint &Nil{container{{}}};
 
     dint::dint(unsigned long long arg) : data{}
     {
@@ -19,13 +19,28 @@ namespace bigint
         remove_leading_zeros();
     }
 
-    dint::dint(const container &arg):data{arg}
+    dint::dint(const container &arg) : data{arg}
     {
         remove_leading_zeros();
     }
 
-    dint::dint(container &&arg):data{arg}
+    dint::dint(container &&arg) : data{arg}
     {
         remove_leading_zeros();
+    }
+
+    bool dint::operator!=(const dint &a) const
+    {
+        return !operator==(*this, a);
+    }
+
+    bool dint::operator<=(const dint &a) const
+    {
+        return !operator>(*this, a);
+    }
+
+    bool dint::operator>=(const dint &a) const
+    {
+        return !operator<(*this, a);
     }
 }
