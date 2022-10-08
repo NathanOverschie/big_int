@@ -1,169 +1,77 @@
-#include <iostream>
-#include <iomanip>
-#include <vector>
-#include <string>
-#include <sstream>
+#include "dint.h"
 
 namespace bigint
 {
-
-	typedef unsigned long long base;
-	typedef std::vector<base> container;
-
-	using namespace std;
 
 	/**
 	 * @brief A class for dynamic integers. This class is a integer value class for integer of an arbitrary size.
 	 *
 	 */
-	class dint
+
+
+	dint &dint::operator++()
 	{
-
-	private:
-		// data represents the integer in words of size base
-		// data[0] is the LSB
-		// data has at least size 1
-		// the most significant word is not 0 except if the total is 0
-		container data{0};
-		bool negative{false};
-
-		void remove_leading_zeros();
-
-		/// @brief adds the two dints together, or substracts b from a.
-		/// @param a first addition argument
-		/// @param b second addition argument
-		/// @param dest the result will go into this dint
-		/// @param subtract if false will to addition if true will do substraction
-		/// @param c inital carry
-		/// @invariant \code{(c => a > b)}
-		void add(const dint &&a, const dint &&b, dint &dest, const bool substract, const bool increment);
-
-	public:
-		dint() = default;
-		dint(const dint &) = default;
-		dint(dint &&) = default;
-
-		/**
-		 * @brief Construct a new dint object
-		 *
-		 * @param arg an integer type that will be converted to dint
-		 */
-		dint(const base &arg)
+		if (negative)
 		{
-			data[0] = arg;
+			sub(move(*this), move(Nil), *this, true);
+		}
+		else
+		{
+			add(move(*this), move(Nil), *this, true);
+		}
+		return *this;
+	}
+
+	dint &dint::operator--()
+	{
+		if (!negative)
+		{
+			sub(move(*this), move(Nil), *this, true);
+		}
+		else
+		{
+			add(move(*this), move(Nil), *this, true);
+		}
+		return *this;
+		return *this;
+	}
+
+	void dint::add(const dint &&big, const dint &&small, dint &dest, const bool increment = false)
+	{
+		// Initialize the iterators
+		auto pbig = big.data.begin();
+		auto psmall = small.data.begin();
+		auto pdest = dest.data.begin();
+
+		base t;
+		// Initialize the carry bit (can be one initially)
+		base c = increment ? 1 : 0;
+
+		// First part of calculation, both numbers contribute to the result
+		for (; psmall != small.data.end(); pbig++, psmall++, pdest++)
+		{
+
+			t = *pbig;
+			*pdest = t + *psmall + c;
+			c = (*pdest >= t + c ? 0 : 1);
 		}
 
-		dint(const container &arg)
+		// Second part of the calculation, only one number contributes to the result
+		for (; pbig != big.data.end() && (c == 1 || big != dest); pbig++, pdest++)
 		{
-			data = arg;
-			remove_leading_zeros();
+
+			*pdest = *pbig + c;
+			c = (*pdest >= c ? 0 : 1);
 		}
 
-		dint(container &&arg)
+		// Optionally add an extra word to store the leftover carry bit in.
+		if (c == 1 && pbig == big.data.end())
 		{
-			data = arg;
-			remove_leading_zeros();
+			dest.data.push_back(base{1});
 		}
+	}
 
-		dint &operator=(const dint &) = default;
-		dint &operator=(dint &&) = default;
-
-		friend dint operator+(const dint &, const dint &);
-		friend dint operator+(const dint &, dint &&);
-
-		friend bool absgrt(const dint &, const dint &);
-		friend bool abslst(const dint &, const dint &);
-		friend bool operator>(const dint &, const dint &);
-		friend bool operator<(const dint &, const dint &);
-		friend bool operator==(const dint &, const dint &);
-
-		bool operator!=(const dint &a) const
-		{
-			return !operator==(*this, a);
-		}
-
-		bool operator<=(const dint &a) const
-		{
-			return !operator>(*this, a);
-		}
-
-		bool operator>=(const dint &a) const
-		{
-			return !operator<(*this, a);
-		}
-
-		void operator+=(const dint &);
-
-		void operator+=(base);
-
-		void operator-=(const dint &a)
-		{
-			negative = !negative;
-			operator+=(a);
-			negative = !negative;
-		}
-
-		dint operator++(int)
-		{
-			dint tmp{*this};
-			operator+=(dint{1});
-			return tmp;
-		}
-
-		dint &operator++()
-		{
-			operator+=(dint{1});
-			return *this;
-		}
-
-		dint operator--(int)
-		{
-			dint tmp{*this};
-			operator+=(-dint{1});
-			return tmp;
-		}
-
-		dint &operator--()
-		{
-			operator+=(-dint{1});
-			return *this;
-		}
-
-		dint operator-() const
-		{
-			dint res{*this};
-			res.negative = !res.negative;
-			return res;
-		}
-
-		~dint() = default;
-
-		string toHexString() const;
-
-		size_t size() const
-		{
-			return data.size();
-		}
-
-		base front() const
-		{
-			return data.front();
-		}
-
-		base back() const
-		{
-			return data.back();
-		}
-
-		bool neg() const
-		{
-			return negative;
-		}
-	};
-
-	static const dint empty{container{}};
-
-	void dint::add(const dint &&big, const dint &&small, dint &dest, const bool substract = false, const bool increment = false)
+	void dint::sub(const dint &&big, const dint &&small, dint &dest, const bool increment = false)
 	{
 		// Initialize the iterators
 		auto pbig = big.data.begin();
@@ -181,77 +89,49 @@ namespace bigint
 		// First part of calculation, both numbers contribute to the result
 		for (; psmall != small.data.end(); pbig++, psmall++, pdest++)
 		{
-			if (!substract)
+			t = *pbig;
+			*pdest = *pbig - *psmall - c;
+			c = (*pdest <= t ? 0 : 1);
+
+			if (*pdest == 0)
 			{
-				t = *pbig;
-				*pdest = t + *psmall + c;
-				c = (*pdest >= t + c ? 0 : 1);
+				if (!zeros)
+				{
+					pzeros = pdest;
+					zeros = true;
+				}
 			}
 			else
 			{
-				t = *pbig;
-				*pdest = *pbig - *psmall - c;
-				c = (*pdest <= t ? 0 : 1);
-
-				if (*pdest == 0)
-				{
-					if (!zeros)
-					{
-						pzeros = pdest;
-						zeros = true;
-					}
-				}
-				else
-				{
-					zeros = false;
-				}
+				zeros = false;
 			}
 		}
 
 		// Second part of the calculation, only one number contributes to the result
 		for (; pbig != big.data.end() && (c == 1 || big != dest); pbig++, pdest++)
 		{
-			if (!substract)
+			t = *pbig;
+			*pdest = t - c;
+			c = (*pdest <= t ? 0 : 1);
+
+			if (*pdest == 0)
 			{
-				*pdest = *pbig + c;
-				c = (*pdest >= c ? 0 : 1);
+				if (!zeros)
+				{
+					pzeros = pdest;
+					zeros = true;
+				}
 			}
 			else
 			{
-				t = *pbig;
-				*pdest = t - c;
-				c = (*pdest <= t ? 0 : 1);
-
-				if (*pdest == 0)
-				{
-					if (!zeros)
-					{
-						pzeros = pdest;
-						zeros = true;
-					}
-				}
-				else
-				{
-					zeros = false;
-				}
+				zeros = false;
 			}
 		}
 
-		if (!substract)
+		// Remove leading zeros
+		if (zeros)
 		{
-			// Optionally add an extra word to store the leftover carry bit in.
-			if (c == 1 && pbig == big.data.end())
-			{
-				dest.data.push_back(base{1});
-			}
-		}
-		else
-		{
-			// Remove leading zeros
-			if (zeros)
-			{
-				dest.data.erase(pzeros, dest.data.end());
-			}
+			dest.data.erase(pzeros, dest.data.end());
 		}
 	}
 
@@ -261,95 +141,31 @@ namespace bigint
 		size_t sa = a.data.size();
 		size_t sb = b.data.size();
 
-		size_t max;
-		size_t min;
+		size_t max = sa > sb ? sa : sb;
 
-		const container *dmax;
-		const container *dmin;
 		dint res;
-
-		// Assign the biggest number to max and dmax, and the smallest to min and dmin
-		if (a > b)
-		{
-			max = a.data.size();
-			min = b.data.size();
-
-			dmax = &a.data;
-			dmin = &b.data;
-
-			// The result will take the sign of the biggest number wether it is addition or subtraction
-			res.negative = a.negative;
-		}
-		else
-		{
-			max = b.data.size();
-			min = a.data.size();
-
-			dmax = &b.data;
-			dmin = &a.data;
-			// The result will take the sign of the biggest number wether it is addition or subtraction
-			res.negative = b.negative;
-		}
 
 		// The result vector has the size of the biggest number (possibly 1 extra word for the carry but thats done later)
 		res.data = container(max);
 
-		// Create a reference to the result data
-		container &dr{res.data};
-
 		if (a.negative == b.negative)
 		{
 			// Addition
-			size_t i;
-			char c = 0;
-
-			// first part of addition: both numbers contribute to the result
-			for (i = 0; i < min; i++)
-			{
-				dr[i] = (*dmax)[i] + (*dmin)[i] + c;
-				c = dr[i] >= (*dmax)[i] + c ? 0 : 1;
-			}
-
-			// second part of addition: only biggest number contributes to the result
-			for (; i < max && c == 1; i++)
-			{
-				dr[i] = (*dmax)[i] + c;
-				c = dr[i] >= c ? 0 : 1;
-			}
-
-			// Optionally add carry word
-			if (c == 1 && i == max)
-			{
-				dr.push_back(base{1});
-			}
+			dint::add(move(a), move(b), res);
 		}
 		else
 		{
 			// Substraction
-			size_t i;
-			char c = 0;
-			// first part of the subtraction: both numbers contribute to the result
-			for (i = 0; i < min; i++)
+			if (a > b)
 			{
-				dr[i] = (*dmax)[i] - (*dmin)[i] - c;
-				c = dr[i] <= (*dmax)[i] ? 0 : 1;
+				dint::sub(move(a), move(b), res);
+				res.negative = a.negative;
 			}
-			// second part of the subtraction: only biggest number contributes to the result
-			for (; i < max; i++)
+			else
 			{
-				dr[i] = (*dmax)[i] - c;
-				c = dr[i] <= (*dmax)[i] ? 0 : 1;
+				dint::sub(move(b), move(a), res);
+				res.negative = b.negative;
 			}
-
-			// find leading words with zeros
-			for (i = max; i > 1; i--)
-			{
-				if (dr[i] != 0)
-					break;
-			}
-
-			// delete words with leading zeros
-			dr.resize(i);
 		}
 
 		return res;
@@ -372,13 +188,21 @@ namespace bigint
 			return false;
 		}
 
-		for (int i = a.size() - 1; i >= 0; i--)
+		auto pa = a.data.crbegin();
+		auto pb = b.data.crbegin();
+
+		for (; pa != a.data.crend(); pa++, pb++)
 		{
-			if (a.data[i] < b.data[i])
+			if (*pa < *pb)
 			{
 				return true;
 			}
+			if (*pa > *pb)
+			{
+				return false;
+			}
 		}
+
 		return false;
 	}
 
@@ -393,13 +217,21 @@ namespace bigint
 			return false;
 		}
 
-		for (int i = a.size() - 1; i >= 0; i--)
+		auto pa = a.data.crbegin();
+		auto pb = b.data.crbegin();
+
+		for (; pa != a.data.crend(); pa++, pb++)
 		{
-			if (a.data[i] > b.data[i])
+			if (*pa > *pb)
 			{
 				return true;
 			}
+			if (*pa < *pb)
+			{
+				return false;
+			}
 		}
+
 		return false;
 	}
 
@@ -512,12 +344,12 @@ namespace bigint
 			// Substraction
 			if (absgrt(a, *this))
 			{
-				add(move(a), move(*this), *this, true);
+				sub(move(a), move(*this), *this);
 				negative = a.negative;
 			}
 			else
 			{
-				add(move(*this), move(a), *this, true);
+				sub(move(*this), move(a), *this);
 			}
 		}
 	}
@@ -568,18 +400,28 @@ namespace bigint
 
 		data.resize(i + 1);
 	}
+
 }
 
 using namespace bigint;
 
 int main(int argc, char const *argv[])
 {
-	dint f{1};
 
-	for (dint i = 1; i <= 1000000; i++)
+	dint f{};
+
+	dint range{10000000};
+
+	dint offset{13333};
+
+	for (dint i = 1; i <= range; ++i)
 	{
-		f += i;
+
+		f += offset;
 	}
+
+	cout << range.toHexString() << endl;
+	cout << offset.toHexString() << endl;
 
 	cout << f.toHexString() << endl;
 
