@@ -187,6 +187,55 @@ namespace bigint
 		return true;
 	}
 
+	dint dint::operator<<(unsigned int n) const
+	{
+		// TODO implement
+	}
+
+	dint dint::operator>>(unsigned int n) const
+	{
+		// TODO implement
+	}
+
+	dint &dint::operator<<=(unsigned int n)
+	{
+		unsigned int m = n % bits_per_word;
+
+		base t = 0;
+
+		for (auto &&i = data.rbegin(); i != data.rend(); i++)
+		{
+			*i = (*i << m) + t;
+
+			//TODO complete implementation
+		}
+	}
+
+	dint &dint::operator>>=(unsigned int)
+	{
+		// TODO implement
+	}
+
+	void dint::shiftwordsright(size_t n)
+	{
+		if (n >= size())
+		{
+			data = container{{0}};
+		}
+		else
+		{
+			data.erase(data.begin(), data.begin() + n);
+		}
+	}
+
+	void dint::shiftwordsleft(size_t n)
+	{
+		container t(n, base{0});
+		t.insert(t.end(), data.begin(), data.end());
+
+		data = t;
+	}
+
 	void dint::remove_leading_zeros()
 	{
 
