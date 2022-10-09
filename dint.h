@@ -103,6 +103,7 @@ namespace bigint
 		static bool absgrt(const dint &, const dint &);
 		static bool abslst(const dint &, const dint &);
 	};
+	
 
 	extern const dint &Nil;
 }
