@@ -15,13 +15,15 @@ namespace bigint
 	typedef unsigned char base;
 	typedef vector<base> container;
 
+	constexpr unsigned short bits_per_word = sizeof(base) * __CHAR_BIT__;
+
 	class dint
 	{
 	public:
 		dint() = default;
 		dint(const dint &) = default;
 		dint(dint &&) = default;
-		dint(unsigned long long);
+		explicit dint(unsigned long long);
 		dint(long long);
 		dint(const container &);
 		dint(container &&);
@@ -48,6 +50,12 @@ namespace bigint
 		dint &operator--();
 
 		dint operator-() const;
+
+		dint operator<<(unsigned int) const;
+		dint operator>>(unsigned int) const;
+
+		dint &operator<<=(unsigned int);
+		dint &operator>>=(unsigned int);
 
 		friend dint operator+(const dint &, const dint &);
 		friend dint operator+(const dint &, dint &&);
@@ -80,15 +88,18 @@ namespace bigint
 
 		void remove_leading_zeros();
 
+		void shiftwordsright(size_t);
+		void shiftwordsleft(size_t);
+
 		static void mult(const dint &&a, const dint &&b, dint &dest);
 		static void karatsuba(container::iterator, container::iterator, container::iterator, container::iterator, container::iterator, container::iterator, size_t);
 
 		static void add(const container &&a, const container &&b, container &dest, const bool incr);
 		static bool additer(container::const_iterator &&, container::const_iterator &&, container::const_iterator &&, container::const_iterator &&, container::iterator, container::iterator, const bool);
-		
+
 		static void sub(const container &&a, const container &&b, container &dest, const bool incr);
 		static container::iterator subiter(container::const_iterator &&, container::const_iterator &&, container::const_iterator &&, container::const_iterator &&, container::iterator, container::iterator, const bool);
-		
+
 		static bool absgrt(const dint &, const dint &);
 		static bool abslst(const dint &, const dint &);
 	};
