@@ -36,17 +36,14 @@ namespace bigint
 		bool operator>=(const dint &) const;
 
 		void operator+=(const dint &);
-
 		void operator+=(base);
 
 		void operator-=(const dint &);
 
 		dint operator++(int);
-
 		dint &operator++();
 
 		dint operator--(int);
-
 		dint &operator--();
 
 		dint operator-() const;
@@ -57,8 +54,6 @@ namespace bigint
 		friend bool operator<(const dint &, const dint &);
 		friend bool operator==(const dint &, const dint &);
 
-		friend bool absgrt(const dint &, const dint &);
-		friend bool abslst(const dint &, const dint &);
 
 
 		string toHexString() const;
@@ -91,6 +86,8 @@ namespace bigint
 		/// @invariant \code{(c => a > b)}
 		static void add(const dint &&a, const dint &&b, dint &dest, const bool incr);
 		static void sub(const dint &&a, const dint &&b, dint &dest, const bool decr);
+		static bool absgrt(const dint &, const dint &);
+		static bool abslst(const dint &, const dint &);
 
 	};
 

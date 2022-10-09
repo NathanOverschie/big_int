@@ -2,7 +2,7 @@
 
 namespace bigint
 {
-    const dint& Nil{container{{}}};
+    const dint &Nil{container{{}}};
 
     dint::dint(unsigned long long arg) : data{}
     {
@@ -44,27 +44,6 @@ namespace bigint
         return !operator<(*this, a);
     }
 
-    void dint::operator-=(const dint &a)
-    {
-        negative = !negative;
-        operator+=(a);
-        negative = !negative;
-    }
-
-    dint dint::operator++(int)
-    {
-        dint tmp{*this};
-        operator++();
-        return tmp;
-    }
-
-    dint dint::operator--(int)
-    {
-        dint tmp{*this};
-        operator--();
-        return tmp;
-    }
-
     dint dint::operator-() const
     {
         dint res{*this};
@@ -91,4 +70,151 @@ namespace bigint
     {
         return negative;
     }
+
+    bool dint::abslst(const dint &a, const dint &b)
+    {
+        if (a.size() < b.size())
+        {
+            return true;
+        }
+        if (a.size() > b.size())
+        {
+            return false;
+        }
+
+        auto pa = a.data.crbegin();
+        auto pb = b.data.crbegin();
+
+        for (; pa != a.data.crend(); pa++, pb++)
+        {
+            if (*pa < *pb)
+            {
+                return true;
+            }
+            if (*pa > *pb)
+            {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    bool dint::absgrt(const dint &a, const dint &b)
+    {
+        if (a.size() > b.size())
+        {
+            return true;
+        }
+        if (a.size() < b.size())
+        {
+            return false;
+        }
+
+        auto pa = a.data.crbegin();
+        auto pb = b.data.crbegin();
+
+        for (; pa != a.data.crend(); pa++, pb++)
+        {
+            if (*pa > *pb)
+            {
+                return true;
+            }
+            if (*pa < *pb)
+            {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    bool operator>(const dint &a, const dint &b)
+    {
+        if (a.neg() && b.neg())
+        {
+            return dint::abslst(a, b);
+        }
+        if (a.neg())
+        {
+            return false;
+        }
+        if (b.neg())
+        {
+            return true;
+        }
+        return dint::absgrt(a, b);
+    }
+
+    bool operator<(const dint &a, const dint &b)
+    {
+        if (a.neg() && b.neg())
+        {
+            return dint::absgrt(a, b);
+        }
+        if (a.neg())
+        {
+            return true;
+        }
+        if (b.neg())
+        {
+            return false;
+        }
+        return dint::abslst(a, b);
+    }
+
+    bool operator==(const dint &a, const dint &b)
+    {
+        if (a.size() != b.size())
+        {
+            return false;
+        }
+
+        for (int i = a.size() - 1; i >= 0; i--)
+        {
+            if (a.data[i] != b.data[i])
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    //TODO make into iterators
+    void dint::remove_leading_zeros()
+	{
+		size_t i;
+		for (i = data.size() - 1; i > 1; i--)
+		{
+			if (data[i] != 0)
+			{
+				break;
+			}
+		}
+
+		data.resize(i + 1);
+	}
+
+    /**
+     * @brief Give a hex string representation of dint
+     *
+     * @return hex string representations
+     */
+    //TODO make into iterators
+    string dint::toHexString() const
+    {
+        ostringstream r{};
+
+        r << (negative ? '-' : ' ');
+
+        for (size_t i = size(); i != 0; i--)
+        {
+            r << hex << setw(sizeof(base) * 2) << setfill('0');
+            r << static_cast<unsigned long long>(data[i - 1]);
+            r << ' ';
+        }
+
+        return r.str();
+    }
+
 }

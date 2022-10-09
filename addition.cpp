@@ -1,14 +1,6 @@
 #include "dint.h"
 
-namespace bigint
-{
-
-	/**
-	 * @brief A class for dynamic integers. This class is a integer value class for integer of an arbitrary size.
-	 *
-	 */
-
-
+namespace bigint {
 	dint &dint::operator++()
 	{
 		if (negative)
@@ -35,6 +27,20 @@ namespace bigint
 		return *this;
 		return *this;
 	}
+
+    dint dint::operator++(int)
+    {
+        dint tmp{*this};
+        operator++();
+        return tmp;
+    }
+
+    dint dint::operator--(int)
+    {
+        dint tmp{*this};
+        operator--();
+        return tmp;
+    }
 
 	void dint::add(const dint &&big, const dint &&small, dint &dest, const bool increment = false)
 	{
@@ -177,114 +183,15 @@ namespace bigint
 		return b;
 	}
 
-	bool abslst(const dint &a, const dint &b)
-	{
-		if (a.size() < b.size())
-		{
-			return true;
-		}
-		if (a.size() > b.size())
-		{
-			return false;
-		}
 
-		auto pa = a.data.crbegin();
-		auto pb = b.data.crbegin();
+    void dint::operator-=(const dint &a)
+    {
+        negative = !negative;
+        operator+=(a);
+        negative = !negative;
+    }
 
-		for (; pa != a.data.crend(); pa++, pb++)
-		{
-			if (*pa < *pb)
-			{
-				return true;
-			}
-			if (*pa > *pb)
-			{
-				return false;
-			}
-		}
 
-		return false;
-	}
-
-	bool absgrt(const dint &a, const dint &b)
-	{
-		if (a.size() > b.size())
-		{
-			return true;
-		}
-		if (a.size() < b.size())
-		{
-			return false;
-		}
-
-		auto pa = a.data.crbegin();
-		auto pb = b.data.crbegin();
-
-		for (; pa != a.data.crend(); pa++, pb++)
-		{
-			if (*pa > *pb)
-			{
-				return true;
-			}
-			if (*pa < *pb)
-			{
-				return false;
-			}
-		}
-
-		return false;
-	}
-
-	bool operator>(const dint &a, const dint &b)
-	{
-		if (a.neg() && b.neg())
-		{
-			return abslst(a, b);
-		}
-		if (a.neg())
-		{
-			return false;
-		}
-		if (b.neg())
-		{
-			return true;
-		}
-		return absgrt(a, b);
-	}
-
-	bool operator<(const dint &a, const dint &b)
-	{
-		if (a.neg() && b.neg())
-		{
-			return absgrt(a, b);
-		}
-		if (a.neg())
-		{
-			return true;
-		}
-		if (b.neg())
-		{
-			return false;
-		}
-		return abslst(a, b);
-	}
-
-	bool operator==(const dint &a, const dint &b)
-	{
-		if (a.size() != b.size())
-		{
-			return false;
-		}
-
-		for (int i = a.size() - 1; i >= 0; i--)
-		{
-			if (a.data[i] != b.data[i])
-			{
-				return false;
-			}
-		}
-		return true;
-	}
 
 	void dint::operator+=(base x)
 	{
@@ -353,77 +260,4 @@ namespace bigint
 			}
 		}
 	}
-
-	/**
-	 * @brief Give a hex string representation of dint
-	 *
-	 * @return hex string representations
-	 */
-	string dint::toHexString() const
-	{
-		ostringstream r{};
-
-		r << (negative ? '-' : ' ');
-
-		for (size_t i = size(); i != 0; i--)
-		{
-			r << hex << setw(sizeof(base) * 2) << setfill('0');
-			r << static_cast<unsigned long long>(data[i - 1]);
-			r << ' ';
-		}
-
-		return r.str();
-	}
-
-	dint mult(const dint &a, base b)
-	{
-		dint res;
-
-		for (base i = 0; i < b; ++i)
-		{
-			res += a;
-		}
-
-		return res;
-	}
-
-	void dint::remove_leading_zeros()
-	{
-		size_t i;
-		for (i = data.size() - 1; i > 1; i--)
-		{
-			if (data[i] != 0)
-			{
-				break;
-			}
-		}
-
-		data.resize(i + 1);
-	}
-
-}
-
-using namespace bigint;
-
-int main(int argc, char const *argv[])
-{
-
-	dint f{};
-
-	dint range{10000000};
-
-	dint offset{13333};
-
-	for (dint i = 1; i <= range; ++i)
-	{
-
-		f += offset;
-	}
-
-	cout << range.toHexString() << endl;
-	cout << offset.toHexString() << endl;
-
-	cout << f.toHexString() << endl;
-
-	return 0;
 }
