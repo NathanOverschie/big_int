@@ -22,6 +22,7 @@ namespace bigint
 		dint(const dint &) = default;
 		dint(dint &&) = default;
 		dint(unsigned long long);
+		dint(long long);
 		dint(const container &);
 		dint(container &&);
 

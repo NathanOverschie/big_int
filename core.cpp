@@ -19,6 +19,13 @@ namespace bigint
 		remove_leading_zeros();
 	}
 
+	dint::dint(long long arg) : data{}
+	{
+		negative = (arg >= 0);
+
+		dint(static_cast<unsigned long long>(arg));
+	}
+
 	dint::dint(const container &arg) : data{arg}
 	{
 		remove_leading_zeros();
