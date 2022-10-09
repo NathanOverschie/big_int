@@ -1,5 +1,7 @@
 #include "dint.h"
 
+#include <random>
+
 using namespace bigint;
 
 dint mult(const dint &a, base b)
@@ -14,26 +16,42 @@ dint mult(const dint &a, base b)
 	return res;
 }
 
-
 int main(int argc, char const *argv[])
 {
+	std::random_device rd;	// Will be used to obtain a seed for the random number engine
+	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
+	std::uniform_int_distribution<unsigned long long> distrib(0, numeric_limits<unsigned long long>::max() / 2 - 1);
 
-	dint f{};
+	unsigned long long a, b, s;
 
-	dint range{10000000};
+	dint da, db, ds;
 
-	dint offset{13333};
-
-	for (dint i = 1; i <= range; ++i)
+	for (size_t i = 0; i < 10000000; i++)
 	{
+		a = distrib(gen);
+		a = distrib(gen);
+		s = a + b;
 
-		f += offset;
+
+		da = dint(a);
+		db = dint(b);
+		ds = da + db;
+
+		if (dint{s} != ds)
+		{
+			cout << "error" << endl;
+
+			cout << "a: " << hex << a << endl;
+			cout << "b: " << hex << b << endl;
+
+			cout << "s: " << hex << s << endl;
+			cout << "ds: " << ds.toHexString() << endl;
+
+			return 0;
+		}
 	}
 
-	cout << range.toHexString() << endl;
-	cout << offset.toHexString() << endl;
-
-	cout << f.toHexString() << endl;
+	cout << "no errors" << endl;
 
 	return 0;
 }
