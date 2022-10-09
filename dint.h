@@ -60,8 +60,6 @@ namespace bigint
 		friend bool operator<(const dint &, const dint &);
 		friend bool operator==(const dint &, const dint &);
 
-
-
 		string toHexString() const;
 
 		size_t size() const;
@@ -83,8 +81,13 @@ namespace bigint
 
 		void remove_leading_zeros();
 
-		static void add(const dint &&a, const dint &&b, dint &dest, const bool incr);
-		static void sub(const dint &&a, const dint &&b, dint &dest, const bool decr);
+		static void mult(const dint &&a, const dint&&b, dint &dest);
+		static void karatsuba(container::iterator, container::iterator, container::iterator, container::iterator, container::iterator, container::iterator, size_t);
+
+
+		static void add(const container &&a, const container &&b, container &dest, const bool incr);
+		static void sub(const container &&a, const container &&b, container &dest, const bool decr);
+
 		static bool absgrt(const dint &, const dint &);
 		static bool abslst(const dint &, const dint &);
 
