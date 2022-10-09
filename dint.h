@@ -30,7 +30,6 @@ namespace bigint
 		dint &operator=(const dint &) = default;
 		dint &operator=(dint &&) = default;
 
-
 		bool operator!=(const dint &) const;
 		bool operator<=(const dint &) const;
 		bool operator>=(const dint &) const;
@@ -48,7 +47,6 @@ namespace bigint
 		dint &operator--();
 
 		dint operator-() const;
-
 
 		friend dint operator+(const dint &, const dint &);
 		friend dint operator+(const dint &, dint &&);
@@ -81,17 +79,18 @@ namespace bigint
 
 		void remove_leading_zeros();
 
-		static void mult(const dint &&a, const dint&&b, dint &dest);
+		static void mult(const dint &&a, const dint &&b, dint &dest);
 		static void karatsuba(container::iterator, container::iterator, container::iterator, container::iterator, container::iterator, container::iterator, size_t);
 
-
 		static void add(const container &&a, const container &&b, container &dest, const bool incr);
-		static void sub(const container &&a, const container &&b, container &dest, const bool decr);
-
+		static bool additer(container::const_iterator &&, container::const_iterator &&, container::const_iterator &&, container::const_iterator &&, container::iterator, container::iterator, const bool);
+		
+		static void sub(const container &&a, const container &&b, container &dest, const bool incr);
+		static container::iterator subiter(container::const_iterator &&, container::const_iterator &&, container::const_iterator &&, container::const_iterator &&, container::iterator, container::iterator, const bool);
+		
 		static bool absgrt(const dint &, const dint &);
 		static bool abslst(const dint &, const dint &);
-
 	};
 
-	extern const dint& Nil;
+	extern const dint &Nil;
 }

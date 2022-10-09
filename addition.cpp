@@ -3,350 +3,381 @@
 namespace bigint
 {
 
-    /**
-     * @brief adds the two dints together
-     * 
-     * @param big first addition argument
-     * @param small second addition argument 
-     * @param dest the result will go into this dint
-     * @param increment weither or not to do an increment
-     * @pre{big >= small}
-     * @pre{dest.size() == big.size()}
-     * @post{!increment => dest = big + small}
-     * @post{increment => dest = big + small + 1}
-     */
-    void dint::add(const container &&big, const container &&small, container &dest, const bool increment = false)
-    {
-        // Initialize the iterators
-        auto pbig = big.begin();
-        auto psmall = small.begin();
-        auto pdest = dest.begin();
+	bool dint::additer(
+		container::const_iterator &&big_begin,
+		container::const_iterator &&big_end,
+		container::const_iterator &&small_begin,
+		container::const_iterator &&small_end,
+		container::iterator dest_begin,
+		container::iterator dest_end,
+		const bool increment = false)
+	{
+		// Initialize the iterators
+		auto pbig = big_begin;
+		auto psmall = small_begin;
+		auto pdest = dest_begin;
 
-        base t;
-        // Initialize the carry bit (can be one initially)
-        base c = increment ? 1 : 0;
+		base t;
+		// Initialize the carry bit (can be one initially)
+		base c = increment ? 1 : 0;
 
-        // First part of calculation, both numbers contribute to the result
-        for (; psmall != small.end(); pbig++, psmall++, pdest++)
-        {
+		// First part of calculation, both numbers contribute to the result
+		for (; psmall != small_end; pbig++, psmall++, pdest++)
+		{
 
-            t = *pbig;
-            *pdest = t + *psmall + c;
-            c = (*pdest >= t + c ? 0 : 1);
-        }
+			t = *pbig;
+			*pdest = t + *psmall + c;
+			c = (*pdest >= t + c ? 0 : 1);
+		}
 
-        // Second part of the calculation, only one number contributes to the result
-        for (; pbig != big.end() && (c == 1 || big != dest); pbig++, pdest++)
-        {
+		// Second part of the calculation, only one number contributes to the result
+		for (; pbig != big_end && (c == 1 || big_begin != dest_begin); pbig++, pdest++)
+		{
 
-            *pdest = *pbig + c;
-            c = (*pdest >= c ? 0 : 1);
-        }
+			*pdest = *pbig + c;
+			c = (*pdest >= c ? 0 : 1);
+		}
 
-        // Optionally add an extra word to store the leftover carry bit in.
-        if (c == 1 && pbig == big.end())
-        {
-            dest.push_back(base{1});
-        }
-    }
+		// Optionally add an extra word to store the leftover carry bit in.
+		if (c == 1 && pbig == big_end)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
 
-    /**
-     * @brief substracts b from a.
-     * 
-     * @param big first addition argument
-     * @param small second addition argument 
-     * @param dest the result will go into this dint
-     * @param increment weither or not to do an increment
-     * @pre{big >= small}
-     * @pre{dest.size() == big.size()}
-     * @post{!increment => dest = big - small}
-     * @post{increment => dest = big - small - 1}
-     */
-    void dint::sub(const container &&big, const container &&small, container &dest, const bool increment = false)
-    {
-        // Initialize the iterators
-        auto pbig = big.begin();
-        auto psmall = small.begin();
-        auto pdest = dest.begin();
+	/**
+	 * @brief adds the two dints together
+	 *
+	 * @param big first addition argument
+	 * @param small second addition argument
+	 * @param dest the result will go into this dint
+	 * @param increment weither or not to do an increment
+	 * @pre{big >= small}
+	 * @pre{dest.size() == big.size()}
+	 * @post{!increment => dest = big + small}
+	 * @post{increment => dest = big + small + 1}
+	 */
+	void dint::add(const container &&big, const container &&small, container &dest, const bool increment = false)
+	{
+		if (additer(big.cbegin(), big.cend(), small.cbegin(), small.cend(), dest.begin(), dest.end(), increment))
+		{
+			dest.push_back(base{1});
+		}
+	}
 
-        // Iterator for checking leading zeros for substraction
-        container::iterator pzeros;
-        bool zeros = false;
+	container::iterator dint::subiter(
+		container::const_iterator &&big_begin,
+		container::const_iterator &&big_end,
+		container::const_iterator &&small_begin,
+		container::const_iterator &&small_end,
+		container::iterator dest_begin,
+		container::iterator dest_end,
+		const bool increment = false)
+	{
+		// Initialize the iterators
+		auto pbig = big_begin;
+		auto psmall = small_begin;
+		auto pdest = dest_begin;
 
-        base t;
-        // Initialize the carry bit (can be one initially)
-        base c = increment ? 1 : 0;
+		// Iterator for checking leading zeros for substraction
+		container::iterator pzeros;
+		bool zeros = false;
 
-        // First part of calculation, both numbers contribute to the result
-        for (; psmall != small.end(); pbig++, psmall++, pdest++)
-        {
-            t = *pbig;
-            *pdest = *pbig - *psmall - c;
-            c = (*pdest <= t ? 0 : 1);
+		base t;
+		// Initialize the carry bit (can be one initially)
+		base c = increment ? 1 : 0;
 
-            if (*pdest == 0)
-            {
-                if (!zeros)
-                {
-                    pzeros = pdest;
-                    zeros = true;
-                }
-            }
-            else
-            {
-                zeros = false;
-            }
-        }
+		// First part of calculation, both numbers contribute to the result
+		for (; psmall != small_end; pbig++, psmall++, pdest++)
+		{
+			t = *pbig;
+			*pdest = *pbig - *psmall - c;
+			c = (*pdest <= t ? 0 : 1);
 
-        // Second part of the calculation, only one number contributes to the result
-        for (; pbig != big.end() && (c == 1 || big != dest); pbig++, pdest++)
-        {
-            t = *pbig;
-            *pdest = t - c;
-            c = (*pdest <= t ? 0 : 1);
+			if (*pdest == 0)
+			{
+				if (!zeros)
+				{
+					pzeros = pdest;
+					zeros = true;
+				}
+			}
+			else
+			{
+				zeros = false;
+			}
+		}
 
-            if (*pdest == 0)
-            {
-                if (!zeros)
-                {
-                    pzeros = pdest;
-                    zeros = true;
-                }
-            }
-            else
-            {
-                zeros = false;
-            }
-        }
+		// Second part of the calculation, only one number contributes to the result
+		for (; pbig != big_end && (c == 1 || big_begin != dest_begin); pbig++, pdest++)
+		{
+			t = *pbig;
+			*pdest = t - c;
+			c = (*pdest <= t ? 0 : 1);
 
-        // Remove leading zeros
-        if (zeros)
-        {
-            dest.erase(pzeros, dest.end());
-        }
-    }
+			if (*pdest == 0)
+			{
+				if (!zeros)
+				{
+					pzeros = pdest;
+					zeros = true;
+				}
+			}
+			else
+			{
+				zeros = false;
+			}
+		}
 
-    /**
-     * @brief prefix ++ operator
-     * 
-     * @return dint& incremented dint
-     */
-    dint &dint::operator++()
-    {
-        if (negative)
-        {
-            sub(move(this->data), move(Nil.data), this->data, true);
-        }
-        else
-        {
-            add(move(this->data), move(Nil.data), this->data, true);
-        }
-        return *this;
-    }
+		// Remove leading zeros
+		return pzeros;
+	}
+	
+	/**
+	 * @brief substracts b from a.
+	 *
+	 * @param big first addition argument
+	 * @param small second addition argument
+	 * @param dest the result will go into this dint
+	 * @param increment weither or not to do an increment
+	 * @pre{big >= small}
+	 * @pre{dest.size() == big.size()}
+	 * @post{!increment => dest = big - small}
+	 * @post{increment => dest = big - small - 1}
+	 */
+	void dint::sub(const container &&big, const container &&small, container &dest, const bool increment = false)
+	{
+		auto pzeros = subiter(big.cbegin(), big.cend(), small.cbegin(), small.cend(), dest.begin(), dest.end(), increment);
 
-    /**
-     * @brief prefix -- operator
-     * 
-     * @return dint& decremented dint
-     */
-    dint &dint::operator--()
-    {
-        if (!negative)
-        {
-            sub(move(this->data), move(Nil.data), this->data, true);
-        }
-        else
-        {
-            add(move(this->data), move(Nil.data), this->data, true);
-        }
-        return *this;
-        return *this;
-    }
+		dest.erase(pzeros, dest.end());
+	}
 
-    /**
-     * @brief postfix ++ operator
-     * 
-     * @return dint 
-     */
-    dint dint::operator++(int)
-    {
-        dint tmp{*this};
-        operator++();
-        return tmp;
-    }
 
-    /**
-     * @brief postfix -- operator
-     * 
-     * @return dint 
-     */
-    dint dint::operator--(int)
-    {
-        dint tmp{*this};
-        operator--();
-        return tmp;
-    }
+	/**
+	 * @brief prefix ++ operator
+	 *
+	 * @return dint& incremented dint
+	 */
+	dint &dint::operator++()
+	{
+		if (negative)
+		{
+			sub(move(this->data), move(Nil.data), this->data, true);
+		}
+		else
+		{
+			add(move(this->data), move(Nil.data), this->data, true);
+		}
+		return *this;
+	}
 
-    /**
-     * @brief addition of two dints
-     * 
-     * @param a 
-     * @param b 
-     * @return dint 
-     */
-    dint operator+(const dint &a, const dint &b)
-    {
+	/**
+	 * @brief prefix -- operator
+	 *
+	 * @return dint& decremented dint
+	 */
+	dint &dint::operator--()
+	{
+		if (!negative)
+		{
+			sub(move(this->data), move(Nil.data), this->data, true);
+		}
+		else
+		{
+			add(move(this->data), move(Nil.data), this->data, true);
+		}
+		return *this;
+		return *this;
+	}
 
-        size_t sa = a.data.size();
-        size_t sb = b.data.size();
+	/**
+	 * @brief postfix ++ operator
+	 *
+	 * @return dint
+	 */
+	dint dint::operator++(int)
+	{
+		dint tmp{*this};
+		operator++();
+		return tmp;
+	}
 
-        size_t max = sa > sb ? sa : sb;
+	/**
+	 * @brief postfix -- operator
+	 *
+	 * @return dint
+	 */
+	dint dint::operator--(int)
+	{
+		dint tmp{*this};
+		operator--();
+		return tmp;
+	}
 
-        dint res;
+	/**
+	 * @brief addition of two dints
+	 *
+	 * @param a
+	 * @param b
+	 * @return dint
+	 */
+	dint operator+(const dint &a, const dint &b)
+	{
 
-        // The result vector has the size of the biggest number (possibly 1 extra word for the carry but thats done later)
-        res.data = container(max);
+		size_t sa = a.data.size();
+		size_t sb = b.data.size();
 
-        if (a.negative == b.negative)
-        {
-            // Addition
-            dint::add(move(a.data), move(b.data), res.data);
-        }
-        else
-        {
-            // Substraction
-            if (a > b)
-            {
-                dint::sub(move(a.data), move(b.data), res.data);
-                res.negative = a.negative;
-            }
-            else
-            {
-                dint::sub(move(b.data), move(a.data), res.data);
-                res.negative = b.negative;
-            }
-        }
+		size_t max = sa > sb ? sa : sb;
 
-        return res;
-    }
+		dint res;
 
-    /**
-     * @brief addition of two dints
-     * 
-     * @param a 
-     * @param b 
-     * @return dint 
-     */
-    dint operator+(const dint &a, dint &&b)
-    {
-        b.operator+=(a);
-        return b;
-    }
+		// The result vector has the size of the biggest number (possibly 1 extra word for the carry but thats done later)
+		res.data = container(max);
 
-    /**
-     * @brief substraction
-     * 
-     * @param a 
-     * @param b 
-     * @return dint 
-     */
-    dint operator-(const dint &a, const dint &b)
-    {
-        return a + (-b);
-    }
+		if (a.negative == b.negative)
+		{
+			// Addition
+			dint::add(move(a.data), move(b.data), res.data);
+		}
+		else
+		{
+			// Substraction
+			if (a > b)
+			{
+				dint::sub(move(a.data), move(b.data), res.data);
+				res.negative = a.negative;
+			}
+			else
+			{
+				dint::sub(move(b.data), move(a.data), res.data);
+				res.negative = b.negative;
+			}
+		}
 
-    /**
-     * @brief substraction
-     * 
-     * @param a 
-     * @param b 
-     * @return dint 
-     */
-    dint operator-(const dint &a, dint &&b)
-    {
-        b -= a;
-        return b;
-    }
+		return res;
+	}
 
-    void dint::operator+=(base x)
-    {
+	/**
+	 * @brief addition of two dints
+	 *
+	 * @param a
+	 * @param b
+	 * @return dint
+	 */
+	dint operator+(const dint &a, dint &&b)
+	{
+		b.operator+=(a);
+		return b;
+	}
 
-        bool n = false;
+	/**
+	 * @brief substraction
+	 *
+	 * @param a
+	 * @param b
+	 * @return dint
+	 */
+	dint operator-(const dint &a, const dint &b)
+	{
+		return a + (-b);
+	}
 
-        size_t s = size();
+	/**
+	 * @brief substraction
+	 *
+	 * @param a
+	 * @param b
+	 * @return dint
+	 */
+	dint operator-(const dint &a, dint &&b)
+	{
+		b -= a;
+		return b;
+	}
 
-        if (negative)
-        {
-            x = -x;
-            negative = false;
-            n = true;
-        }
+	void dint::operator+=(base x)
+	{
 
-        data[0] += x;
-        char c = (data[0] >= x) ? 0 : 1;
+		bool n = false;
 
-        size_t i;
+		size_t s = size();
 
-        for (i = 1; i < s && c == 1; i++)
-        {
-            data[i] += c;
-            c = data[i] >= c ? 0 : 1;
-        }
+		if (negative)
+		{
+			x = -x;
+			negative = false;
+			n = true;
+		}
 
-        if (c == 1 && i == s)
-        {
-            data.push_back(1);
-        }
+		data[0] += x;
+		char c = (data[0] >= x) ? 0 : 1;
 
-        if (n)
-        {
-            negative = true;
-        }
-    }
+		size_t i;
 
-    void dint::operator+=(const dint &a)
-    {
-        // get the sizes
-        size_t sa = a.data.size();
-        size_t sb = data.size();
+		for (i = 1; i < s && c == 1; i++)
+		{
+			data[i] += c;
+			c = data[i] >= c ? 0 : 1;
+		}
 
-        // resize the current number if neccesary
-        if (sb < sa)
-        {
-            data.resize(sa);
-        }
+		if (c == 1 && i == s)
+		{
+			data.push_back(1);
+		}
 
-        if (a.negative == negative)
-        {
-            // Addition
-            add(move(this->data), move(a.data), this->data);
-        }
-        else
-        {
-            // Substraction
-            if (absgrt(a, *this))
-            {
-                sub(move(a.data), move(this->data), this->data);
-                negative = a.negative;
-            }
-            else
-            {
-                sub(move(this->data), move(a.data), this->data);
-            }
-        }
-    }
+		if (n)
+		{
+			negative = true;
+		}
+	}
 
-    void dint::operator-=(const dint &a)
-    {
-        negative = !negative;
-        operator+=(a);
-        negative = !negative;
-    }
+	void dint::operator+=(const dint &a)
+	{
+		// get the sizes
+		size_t sa = a.data.size();
+		size_t sb = data.size();
 
-    void dint::operator-=(base a)
-    {
-        negative = !negative;
-        operator+=(a);
-        negative = !negative;
-    }
+		// resize the current number if neccesary
+		if (sb < sa)
+		{
+			data.resize(sa);
+		}
+
+		if (a.negative == negative)
+		{
+			// Addition
+			add(move(this->data), move(a.data), this->data);
+		}
+		else
+		{
+			// Substraction
+			if (absgrt(a, *this))
+			{
+				sub(move(a.data), move(this->data), this->data);
+				negative = a.negative;
+			}
+			else
+			{
+				sub(move(this->data), move(a.data), this->data);
+			}
+		}
+	}
+
+	void dint::operator-=(const dint &a)
+	{
+		negative = !negative;
+		operator+=(a);
+		negative = !negative;
+	}
+
+	void dint::operator-=(base a)
+	{
+		negative = !negative;
+		operator+=(a);
+		negative = !negative;
+	}
 }
