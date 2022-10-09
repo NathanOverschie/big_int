@@ -39,6 +39,7 @@ namespace bigint
 		void operator+=(base);
 
 		void operator-=(const dint &);
+		void operator-=(base);
 
 		dint operator++(int);
 		dint &operator++();
@@ -48,8 +49,13 @@ namespace bigint
 
 		dint operator-() const;
 
+
 		friend dint operator+(const dint &, const dint &);
 		friend dint operator+(const dint &, dint &&);
+
+		friend dint operator-(const dint &, const dint &);
+		friend dint operator-(const dint &, dint &&);
+
 		friend bool operator>(const dint &, const dint &);
 		friend bool operator<(const dint &, const dint &);
 		friend bool operator==(const dint &, const dint &);
