@@ -83,13 +83,6 @@ namespace bigint
 
 		void remove_leading_zeros();
 
-		/// @brief adds the two dints together, or substracts b from a.
-		/// @param a first addition argument
-		/// @param b second addition argument
-		/// @param dest the result will go into this dint
-		/// @param subtract if false will to addition if true will do substraction
-		/// @param c inital carry
-		/// @invariant \code{(c => a > b)}
 		static void add(const dint &&a, const dint &&b, dint &dest, const bool incr);
 		static void sub(const dint &&a, const dint &&b, dint &dest, const bool decr);
 		static bool absgrt(const dint &, const dint &);

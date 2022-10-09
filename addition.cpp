@@ -3,6 +3,18 @@
 namespace bigint
 {
 
+    /**
+     * @brief adds the two dints together
+     * 
+     * @param big first addition argument
+     * @param small second addition argument 
+     * @param dest the result will go into this dint
+     * @param increment weither or not to do an increment
+     * @pre{big >= small}
+     * @pre{dest.size() == big.size()}
+     * @post{!increment => dest = big + small}
+     * @post{increment => dest = big + small + 1}
+     */
     void dint::add(const dint &&big, const dint &&small, dint &dest, const bool increment = false)
     {
         // Initialize the iterators
@@ -38,6 +50,18 @@ namespace bigint
         }
     }
 
+    /**
+     * @brief substracts b from a.
+     * 
+     * @param big first addition argument
+     * @param small second addition argument 
+     * @param dest the result will go into this dint
+     * @param increment weither or not to do an increment
+     * @pre{big >= small}
+     * @pre{dest.size() == big.size()}
+     * @post{!increment => dest = big - small}
+     * @post{increment => dest = big - small - 1}
+     */
     void dint::sub(const dint &&big, const dint &&small, dint &dest, const bool increment = false)
     {
         // Initialize the iterators
@@ -102,6 +126,11 @@ namespace bigint
         }
     }
 
+    /**
+     * @brief prefix ++ operator
+     * 
+     * @return dint& incremented dint
+     */
     dint &dint::operator++()
     {
         if (negative)
@@ -115,6 +144,11 @@ namespace bigint
         return *this;
     }
 
+    /**
+     * @brief prefix -- operator
+     * 
+     * @return dint& decremented dint
+     */
     dint &dint::operator--()
     {
         if (!negative)
@@ -129,6 +163,11 @@ namespace bigint
         return *this;
     }
 
+    /**
+     * @brief postfix ++ operator
+     * 
+     * @return dint 
+     */
     dint dint::operator++(int)
     {
         dint tmp{*this};
@@ -136,6 +175,11 @@ namespace bigint
         return tmp;
     }
 
+    /**
+     * @brief postfix -- operator
+     * 
+     * @return dint 
+     */
     dint dint::operator--(int)
     {
         dint tmp{*this};
@@ -143,6 +187,13 @@ namespace bigint
         return tmp;
     }
 
+    /**
+     * @brief addition of two dints
+     * 
+     * @param a 
+     * @param b 
+     * @return dint 
+     */
     dint operator+(const dint &a, const dint &b)
     {
 
@@ -179,17 +230,38 @@ namespace bigint
         return res;
     }
 
+    /**
+     * @brief addition of two dints
+     * 
+     * @param a 
+     * @param b 
+     * @return dint 
+     */
     dint operator+(const dint &a, dint &&b)
     {
         b.operator+=(a);
         return b;
     }
 
+    /**
+     * @brief substraction
+     * 
+     * @param a 
+     * @param b 
+     * @return dint 
+     */
     dint operator-(const dint &a, const dint &b)
     {
         return a + (-b);
     }
 
+    /**
+     * @brief substraction
+     * 
+     * @param a 
+     * @param b 
+     * @return dint 
+     */
     dint operator-(const dint &a, dint &&b)
     {
         b -= a;
