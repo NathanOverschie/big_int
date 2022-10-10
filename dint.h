@@ -7,6 +7,8 @@
 #include <sstream>
 #include <list>
 #include <string>
+#include <algorithm>
+#include <random>
 
 namespace bigint
 {
@@ -23,8 +25,8 @@ namespace bigint
 		dint() = default;
 		dint(const dint &) = default;
 		dint(dint &&) = default;
-		explicit dint(unsigned long long);
-		dint(long long);
+		dint(unsigned long long);
+		explicit dint(long long);
 		dint(const container &);
 		dint(container &&);
 

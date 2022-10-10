@@ -79,16 +79,35 @@ bool testSubstraction(std::mt19937 gen, size_t n)
 
 int main(int argc, char const *argv[])
 {
-	std::random_device rd;	// Will be used to obtain a seed for the random number engine
-	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
+	// std::random_device rd;	// Will be used to obtain a seed for the random number engine
+	// std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
 	
-	size_t n =  1000000;
+	// size_t n =  1000000;
 
-	if(testAddition(gen, n))
-		cout << "Addition good" << endl;
+	// if(testAddition(gen, n))
+	// 	cout << "Addition good" << endl;
 
-	if(testSubstraction(gen, n))
-		cout << "Substraction good" << endl;
+	// if(testSubstraction(gen, n))
+	// 	cout << "Substraction good" << endl;
+
+	dint x = 12;
+
+	for (size_t i = 0; i < 10; i++)
+	{
+		cout << x.toHexString() << endl;
+		x <<= 120;
+	}
+
+	for (size_t i = 0; i < 10; i++)
+	{
+		x >>= 120;
+		cout << x.toHexString() << endl;
+	}
+	
+
+	cout << (int) numeric_limits<base>::max() << endl;
+	cout << bits_per_word << endl;
+	cout << ((12 & (numeric_limits<base>::max() << (bits_per_word - 4))) >> (bits_per_word - 4)) << endl;
 
 	return 0;
 }
