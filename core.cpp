@@ -216,7 +216,7 @@ namespace bigint
 		{
 			base x = *i;
 			*i = (*i << m) | t;
-			
+
 			t = (x & (numeric_limits<base>::max() << (bits_per_word - m))) >> (bits_per_word - m);
 		}
 
@@ -225,7 +225,7 @@ namespace bigint
 			data.push_back(t);
 		}
 
-		shiftwordsleft(n/bits_per_word);
+		shiftwordsleft(n / bits_per_word);
 
 		return *this;
 	}
@@ -244,11 +244,12 @@ namespace bigint
 			t = (x & (numeric_limits<base>::max() >> (bits_per_word - m))) << (bits_per_word - m);
 		}
 
-		if(data.back() == 0){
+		if (data.back() == 0)
+		{
 			data.pop_back();
 		}
 
-		shiftwordsright(n/bits_per_word);
+		shiftwordsright(n / bits_per_word);
 
 		return *this;
 	}
@@ -276,22 +277,16 @@ namespace bigint
 	void dint::remove_leading_zeros()
 	{
 
-		auto q = data.end();
+		auto q = data.rbegin();
 		bool last_zero = false;
-		for (auto p = data.begin(); p != data.end(); p++)
+		for (; q != data.rend(); q++)
 		{
-			if (*p == 0 && !last_zero)
-			{
-				q = p;
-				last_zero = true;
-			}
-			else
-			{
-				last_zero = false;
+			if(*q != 0){
+				break;
 			}
 		}
 
-		data.erase(q, data.end());
+		data.erase(q.base(), data.end());
 	}
 
 	/**
