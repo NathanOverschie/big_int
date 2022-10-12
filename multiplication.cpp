@@ -2,6 +2,90 @@
 
 namespace bigint
 {
+	inline base hi(base x)
+	{
+		return x >> (bits_per_word / 2);
+	}
+
+	inline base lo(base x)
+	{
+		return ((1ULL << (bits_per_word / 2)) - 1) & x;
+	}
+
+	/**
+	 * @brief
+	 *
+	 * @param a_begin
+	 * @param a_end
+	 * @param b_begin
+	 * @param b_end
+	 * @param dest_begin
+	 * @param dest_end
+	 * @pre{dest.size = a.size + b.size}
+	 */
+	void dint::basicmult(const container &&a, const container &&b, container &dest)
+	{
+		size_t sa = a.size();
+		size_t sb = b.size();
+		for (auto &&i : dest)
+		{
+			i = 0;
+		}
+
+		base c, t, tt;
+		base s0, s1, s2, s3;
+		base at, bt;
+
+		for (size_t i = 0; i < sa; i++)
+		{
+			c = 0;
+
+			for (size_t j = 0; j < sb; j++)
+			{
+				//Seperate the carry from the remainder
+				at = a[i];
+				bt = b[j];
+
+				base x = lo(at) * lo(bt);
+				s0 = lo(x);
+
+				x = hi(at) * lo(bt) + hi(x);
+				s1 = lo(x);
+				s2 = hi(x);
+
+				x = s1 + lo(at) * hi(bt);
+				s1 = lo(x);
+
+				x = s2 + hi(at) * hi(bt) + hi(x);
+				s2 = lo(x);
+				s3 = hi(x);
+
+				//Remainder
+				t = (s1 << bits_per_word / 2) | s0;
+
+				tt = t + c;
+
+				dest[i+j]+= tt;
+				//Carry from the addition
+				if(tt < t)
+					c = 1;
+				else
+					c = 0;
+
+
+				//Carry from the addition
+				if(dest[i+j] < tt)
+					c++;
+				
+				//Carry from the multiplication
+				c += (s3 << bits_per_word / 2) | s2;
+
+
+			}
+			dest[i + sb] = c;
+		}
+	}
+
 	/**
 	 * @brief
 	 *
@@ -21,30 +105,6 @@ namespace bigint
 	 */
 	void dint::karatsuba(container::iterator a_begin, container::iterator a_end, container::iterator b_begin, container::iterator b_end, container::iterator dest_0, container::iterator dest_4, container::iterator buff_0, container::iterator buff_8, size_t n)
 	{
-		// if (n == 1)
-		// {
-		//     size_t offset = (sizeof(base) * 4);
-
-		//     base a_lo = *a_begin << offset;
-		//     base a_hi = *a_begin >> offset;
-
-		//     base b_lo = *b_begin << offset;
-		//     base b_hi = *b_begin >> offset;
-
-		//     *dest_begin = a_lo * b_lo;
-		//     *dest_end = a_hi * a_hi;
-
-		//     base t = a_lo * b_hi + a_hi * b_lo;
-
-		//     *dest_begin += t << offset;
-		//     *dest_end   += t >> offset;
-		// }
-
-		// if (n % 2 == 1)
-		// {
-		//     n++;
-		// }
-
 		// buff[i] = [dest_begin + (i * n/2), dest_begin + (i * n/2) + n/2]
 		auto dest_1 = dest_0 + n / 2;
 		auto dest_2 = dest_1 + n / 2;
@@ -109,6 +169,19 @@ namespace bigint
 
 	void dint::mult(const dint &&a, const dint &&b, dint &dest)
 	{
+		basicmult(move(a.data), move(b.data), dest.data);
+	}
+
+	dint operator*(const dint &a, const dint &b)
+	{
+		dint res;
+		res.data = container(a.size() + b.size());
+
+		dint::mult(move(a), move(b), res);
+
+		res.remove_leading_zeros();
+
+		return res;
 	}
 
 }
