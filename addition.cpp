@@ -12,6 +12,7 @@ namespace bigint
 		container::iterator dest_end,
 		const bool increment = false)
 	{
+
 		// Initialize the iterators
 		auto pbig = big_begin;
 		auto psmall = small_begin;
@@ -136,7 +137,7 @@ namespace bigint
 		// Remove leading zeros
 		return pzeros;
 	}
-	
+
 	/**
 	 * @brief substracts b from a.
 	 *
@@ -155,7 +156,6 @@ namespace bigint
 
 		dest.erase(pzeros, dest.end());
 	}
-
 
 	/**
 	 * @brief prefix ++ operator
@@ -241,7 +241,12 @@ namespace bigint
 		if (a.negative == b.negative)
 		{
 			// Addition
-			dint::add(move(a.data), move(b.data), res.data);
+			if (sa >= sb)
+			{
+				dint::add(move(a.data), move(b.data), res.data);
+			}else{
+				dint::add(move(b.data), move(a.data), res.data);
+			}
 		}
 		else
 		{
@@ -268,7 +273,7 @@ namespace bigint
 	 * @param b
 	 * @return dint
 	 */
-	dint operator+(const dint &a, dint &&b)
+	dint &operator+(const dint &a, dint &&b)
 	{
 		b.operator+=(a);
 		return b;
@@ -293,7 +298,7 @@ namespace bigint
 	 * @param b
 	 * @return dint
 	 */
-	dint operator-(const dint &a, dint &&b)
+	dint &operator-(const dint &a, dint &&b)
 	{
 		b -= a;
 		return b;
