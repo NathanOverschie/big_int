@@ -21,7 +21,7 @@ namespace bigint
 
 	dint::dint(long long arg) : data{}
 	{
-		negative = (arg >= 0);
+		negative = (arg < 0);
 
 		dint(static_cast<unsigned long long>(arg));
 	}
@@ -189,12 +189,20 @@ namespace bigint
 
 	dint dint::operator<<(unsigned int n) const
 	{
-		// TODO implement
+		dint res{*this};
+
+		res.operator<<=(n);
+
+		return res;
 	}
 
 	dint dint::operator>>(unsigned int n) const
 	{
-		// TODO implement
+		dint res{*this};
+
+		res.operator<<=(n);
+
+		return res;
 	}
 
 	dint &dint::operator<<=(unsigned int n)
@@ -202,18 +210,48 @@ namespace bigint
 		unsigned int m = n % bits_per_word;
 
 		base t = 0;
+		base x;
+
+		for (auto &&i = data.begin(); i != data.end(); i++)
+		{
+			base x = *i;
+			*i = (*i << m) | t;
+
+			t = (x & (numeric_limits<base>::max() << (bits_per_word - m))) >> (bits_per_word - m);
+		}
+
+		if (t > 0)
+		{
+			data.push_back(t);
+		}
+
+		shiftwordsleft(n / bits_per_word);
+
+		return *this;
+	}
+
+	dint &dint::operator>>=(unsigned int n)
+	{
+		unsigned int m = n % bits_per_word;
+
+		base t = 0;
+		base x;
 
 		for (auto &&i = data.rbegin(); i != data.rend(); i++)
 		{
-			*i = (*i << m) + t;
-
-			//TODO complete implementation
+			x = *i;
+			*i = (*i >> m) | t;
+			t = (x & (numeric_limits<base>::max() >> (bits_per_word - m))) << (bits_per_word - m);
 		}
-	}
 
-	dint &dint::operator>>=(unsigned int)
-	{
-		// TODO implement
+		if (data.back() == 0)
+		{
+			data.pop_back();
+		}
+
+		shiftwordsright(n / bits_per_word);
+
+		return *this;
 	}
 
 	void dint::shiftwordsright(size_t n)
@@ -239,22 +277,16 @@ namespace bigint
 	void dint::remove_leading_zeros()
 	{
 
-		auto q = data.end();
+		auto q = data.rbegin();
 		bool last_zero = false;
-		for (auto p = data.begin(); p != data.end(); p++)
+		for (; q != data.rend(); q++)
 		{
-			if (*p == 0 && !last_zero)
-			{
-				q = p;
-				last_zero = true;
-			}
-			else
-			{
-				last_zero = false;
+			if(*q != 0){
+				break;
 			}
 		}
 
-		data.erase(q, data.end());
+		data.erase(q.base(), data.end());
 	}
 
 	/**

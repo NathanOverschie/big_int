@@ -7,6 +7,8 @@
 #include <sstream>
 #include <list>
 #include <string>
+#include <algorithm>
+#include <random>
 
 namespace bigint
 {
@@ -23,8 +25,8 @@ namespace bigint
 		dint() = default;
 		dint(const dint &) = default;
 		dint(dint &&) = default;
-		explicit dint(unsigned long long);
-		dint(long long);
+		dint(unsigned long long);
+		explicit dint(long long);
 		dint(const container &);
 		dint(container &&);
 
@@ -58,14 +60,16 @@ namespace bigint
 		dint &operator>>=(unsigned int);
 
 		friend dint operator+(const dint &, const dint &);
-		friend dint operator+(const dint &, dint &&);
+		friend dint& operator+(const dint &, dint &&);
 
 		friend dint operator-(const dint &, const dint &);
-		friend dint operator-(const dint &, dint &&);
+		friend dint& operator-(const dint &, dint &&);
 
 		friend bool operator>(const dint &, const dint &);
 		friend bool operator<(const dint &, const dint &);
 		friend bool operator==(const dint &, const dint &);
+
+		friend dint operator*(const dint&, const dint&);
 
 		string toHexString() const;
 
@@ -92,7 +96,8 @@ namespace bigint
 		void shiftwordsleft(size_t);
 
 		static void mult(const dint &&a, const dint &&b, dint &dest);
-		static void karatsuba(container::iterator, container::iterator, container::iterator, container::iterator, container::iterator, container::iterator, size_t);
+		static void basicmult(const container&&, const container&&, container&);
+		static void karatsuba(container::iterator, container::iterator, container::iterator, container::iterator, container::iterator, container::iterator, container::iterator, container::iterator, size_t);
 
 		static void add(const container &&a, const container &&b, container &dest, const bool incr);
 		static bool additer(container::const_iterator &&, container::const_iterator &&, container::const_iterator &&, container::const_iterator &&, container::iterator, container::iterator, const bool);
