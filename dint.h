@@ -60,14 +60,15 @@ namespace bigint
 		dint &operator>>=(unsigned int);
 
 		friend dint operator+(const dint &, const dint &);
-		friend dint operator+(const dint &, dint &&);
+		friend dint& operator+(const dint &, dint &&);
 
 		friend dint operator-(const dint &, const dint &);
-		friend dint operator-(const dint &, dint &&);
+		friend dint& operator-(const dint &, dint &&);
 
 		friend bool operator>(const dint &, const dint &);
 		friend bool operator<(const dint &, const dint &);
 		friend bool operator==(const dint &, const dint &);
+
 
 		string toHexString() const;
 
