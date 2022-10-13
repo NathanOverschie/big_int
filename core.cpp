@@ -8,9 +8,8 @@ namespace bigint
 	{
 		int words = sizeof(unsigned long long) / sizeof(base);
 
-		base t;
 
-		for (size_t i = 0; i < words && arg != 0; i++)
+		for (size_t i = 0; i < words && arg != 0ULL; i++)
 		{
 			data.push_back(static_cast<base>(arg));
 			arg >>= (8 * sizeof(base));
@@ -210,7 +209,6 @@ namespace bigint
 		unsigned int m = n % bits_per_word;
 
 		base t = 0;
-		base x;
 
 		for (auto &&i = data.begin(); i != data.end(); i++)
 		{
@@ -278,7 +276,6 @@ namespace bigint
 	{
 
 		auto q = data.rbegin();
-		bool last_zero = false;
 		for (; q != data.rend(); q++)
 		{
 			if(*q != 0){

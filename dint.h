@@ -95,9 +95,9 @@ namespace bigint
 		void shiftwordsright(size_t);
 		void shiftwordsleft(size_t);
 
-		static void mult(const dint &&a, const dint &&b, dint &dest);
+		static void mult(const container &&a, const container &&b, container &dest);
 		static void basicmult(const container&&, const container&&, container&);
-		static void karatsuba(container::iterator, container::iterator, container::iterator, container::iterator, container::iterator, container::iterator, container::iterator, container::iterator, size_t);
+		static void karatsuba(container::iterator&&, container::iterator&&, container::iterator&&, container::iterator&&, container::iterator, container::iterator, size_t);
 
 		static void add(const container &&a, const container &&b, container &dest, const bool incr);
 		static bool additer(container::const_iterator &&, container::const_iterator &&, container::const_iterator &&, container::const_iterator &&, container::iterator, container::iterator, const bool);
