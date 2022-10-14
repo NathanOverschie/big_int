@@ -14,6 +14,28 @@ namespace bigint
 			return ((1ULL << (bits_per_word / 2)) - 1) & x;
 		}
 
+		inline void overflow_product(base a, base b, base &out_lo, base &out_hi)
+		{
+			base s0, s1, s2, s3;
+
+			base x = lo(a) * lo(b);
+			s0 = lo(x);
+
+			x = hi(a) * lo(b) + hi(x);
+			s1 = lo(x);
+			s2 = hi(x);
+
+			x = s1 + lo(a) * hi(b);
+			s1 = lo(x);
+
+			x = s2 + hi(a) * hi(b) + hi(x);
+			s2 = lo(x);
+			s3 = hi(x);
+
+			out_lo = (s1 << bits_per_word / 2) | s0;
+			out_hi = (s3 << bits_per_word / 2) | s2;
+		}
+
 		/**
 		 * @brief
 		 *
@@ -34,9 +56,8 @@ namespace bigint
 				i = 0;
 			}
 
-			base c, t, tt;
-			base s0, s1, s2, s3;
-			base at, bt;
+			base c, t;
+			base lo, hi;
 
 			for (size_t i = 0; i < sa; i++)
 			{
@@ -45,41 +66,23 @@ namespace bigint
 				for (size_t j = 0; j < sb; j++)
 				{
 					// Seperate the carry from the remainder
-					at = a[i];
-					bt = b[j];
+					overflow_product(a[i], b[j], lo, hi);
 
-					base x = lo(at) * lo(bt);
-					s0 = lo(x);
+					t = lo + c;
 
-					x = hi(at) * lo(bt) + hi(x);
-					s1 = lo(x);
-					s2 = hi(x);
-
-					x = s1 + lo(at) * hi(bt);
-					s1 = lo(x);
-
-					x = s2 + hi(at) * hi(bt) + hi(x);
-					s2 = lo(x);
-					s3 = hi(x);
-
-					// Remainder
-					t = (s1 << bits_per_word / 2) | s0;
-
-					tt = t + c;
-
-					dest[i + j] += tt;
+					dest[i + j] += t;
 					// Carry from the addition
-					if (tt < t)
+					if (t < lo)
 						c = 1;
 					else
 						c = 0;
 
 					// Carry from the addition
-					if (dest[i + j] < tt)
+					if (dest[i + j] < t)
 						c++;
 
 					// Carry from the multiplication
-					c += (s3 << bits_per_word / 2) | s2;
+					c += hi;
 				}
 				dest[i + sb] = c;
 			}
@@ -87,50 +90,31 @@ namespace bigint
 
 		base basicmult(container::iterator &&begin, container::iterator &&end, base x)
 		{
-			base c, t, tt;
-			base s0, s1, s2, s3;
-			base at, bt;
+			base c, t;
+			base lo, hi;
 
 			c = 0;
 			for (auto p = begin; p != end; ++p)
 			{
-
 				// Seperate the carry from the remainder
-				at = *p;
-				bt = x;
-
-				base x = lo(at) * lo(bt);
-				s0 = lo(x);
-
-				x = hi(at) * lo(bt) + hi(x);
-				s1 = lo(x);
-				s2 = hi(x);
-
-				x = s1 + lo(at) * hi(bt);
-				s1 = lo(x);
-
-				x = s2 + hi(at) * hi(bt) + hi(x);
-				s2 = lo(x);
-				s3 = hi(x);
+				overflow_product(*p, x, lo, hi);
 
 				// Remainder
-				t = (s1 << bits_per_word / 2) | s0;
+				t = lo + c;
 
-				tt = t + c;
-
-				*p = tt;
+				*p = t;
 				// Carry from the addition
-				if (tt < t)
+				if (t < lo)
 					c = 1;
 				else
 					c = 0;
 
 				// Carry from the addition
-				if (*p < tt)
+				if (*p < t)
 					c++;
 
 				// Carry from the multiplication
-				c += (s3 << bits_per_word / 2) | s2;
+				c += hi;
 			}
 
 			return c;
