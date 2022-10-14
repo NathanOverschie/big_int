@@ -83,6 +83,57 @@ namespace bigint
 		}
 	}
 
+	base dint::basicmult(container::iterator &&begin, container::iterator &&end, base x)
+	{
+		base c, t, tt;
+		base s0, s1, s2, s3;
+		base at, bt;
+
+		c = 0;
+		for (auto p = begin; p != end; ++p)
+		{
+
+			// Seperate the carry from the remainder
+			at = *p;
+			bt = x;
+
+			base x = lo(at) * lo(bt);
+			s0 = lo(x);
+
+			x = hi(at) * lo(bt) + hi(x);
+			s1 = lo(x);
+			s2 = hi(x);
+
+			x = s1 + lo(at) * hi(bt);
+			s1 = lo(x);
+
+			x = s2 + hi(at) * hi(bt) + hi(x);
+			s2 = lo(x);
+			s3 = hi(x);
+
+			// Remainder
+			t = (s1 << bits_per_word / 2) | s0;
+
+			tt = t + c;
+
+			*p = tt;
+			// Carry from the addition
+			if (tt < t)
+				c = 1;
+			else
+				c = 0;
+
+			// Carry from the addition
+			if (*p < tt)
+				c++;
+
+			// Carry from the multiplication
+			c += (s3 << bits_per_word / 2) | s2;
+		}
+
+		return c;
+	}
+
 	/**
 	 * @brief
 	 *
@@ -197,4 +248,19 @@ namespace bigint
 		return res;
 	}
 
+	void dint::operator*=(base x)
+	{
+		base c = basicmult(data.begin(), data.end(), x);
+		if (c != 0)
+		{
+			data.push_back(c);
+		}
+	}
+
+	dint operator*(const dint &a, base b)
+	{
+		dint t{a};
+		t.operator*=(b);
+		return t;
+	}
 }

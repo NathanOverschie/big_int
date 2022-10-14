@@ -19,12 +19,11 @@ bool testAddition(std::mt19937 gen, size_t n)
 		b = distrib(gen);
 		s = a + b;
 
-		//cout << a << '+' << b << '=' << s << ' ' << endl;
+		// cout << a << '+' << b << '=' << s << ' ' << endl;
 
 		da = dint(a);
 		db = dint(b);
 		ds = da + db;
-
 
 		if (dint{s} != ds)
 		{
@@ -41,7 +40,7 @@ bool testAddition(std::mt19937 gen, size_t n)
 			return false;
 		}
 
-		//cout << "✓" << endl;
+		// cout << "✓" << endl;
 	}
 
 	return true;
@@ -65,7 +64,7 @@ bool testSubstraction(std::mt19937 gen, size_t n)
 		db = dint(b);
 		ds = da - db;
 
-		//cout << a << '-' << b << '=' << s << endl;
+		// cout << a << '-' << b << '=' << s << endl;
 
 		if (dint{s} != ds)
 		{
@@ -123,18 +122,57 @@ bool testMultiplication(std::mt19937 gen, size_t n)
 	return true;
 }
 
+bool testMultiplicationWithBase(std::mt19937 gen, size_t n)
+{
+	std::uniform_int_distribution<unsigned long long> distriba(0, numeric_limits<unsigned long long>::max() >> ((sizeof(base) + 1) * __CHAR_BIT__ / 2));
+	std::uniform_int_distribution<base> distribb(0, numeric_limits<base>::max());
+
+	unsigned long long a, s;
+	base b;
+
+	dint da, db, ds;
+
+	for (size_t i = 0; i < n; i++)
+	{
+		a = distriba(gen);
+		b = distribb(gen);
+		s = a * b;
+
+		da = dint(a);
+		db = dint(static_cast<unsigned long long>(b));
+		ds = da * db;
+
+		// cout << a << '*' << static_cast<int>(b) << '=' << s << endl;
+
+		if (dint{s} != ds)
+		{
+			cout << "error" << endl;
+
+			cout << "a: " << hex << a << endl;
+			cout << "b: " << hex << static_cast<int>(b) << endl;
+
+			cout << "s: " << hex << s << endl;
+			cout << "ds: " << ds.toHexString() << endl;
+			cout << "should have been:" << dint{s}.toHexString() << endl;
+
+			return false;
+		}
+	}
+
+	return true;
+}
+
 int main(int argc, char const *argv[])
 {
 	std::random_device rd;	// Will be used to obtain a seed for the random number engine
 	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
 
-	size_t n = 10000000;
+	size_t n = 1000000;
 
-	bool Add, Sub, Mult;
-
-	// Add = testAddition(gen, n);
-	// Sub = testSubstraction(gen, n);
-	Mult = testMultiplication(gen, n);
+	// bool Add = testAddition(gen, n);
+	// bool Sub = testSubstraction(gen, n);
+	// bool Mult = testMultiplication(gen, n);
+	bool MultWithBase = testMultiplicationWithBase(gen, n);
 
 	// if (Add)
 	// 	cout << "Addition good" << endl;
@@ -142,9 +180,11 @@ int main(int argc, char const *argv[])
 	// if (Sub)
 	// 	cout << "Substraction good" << endl;
 
-	if (Mult)
-		cout << "Multiplication good" << endl;
+	// if (Mult)
+	// 	cout << "Multiplication good" << endl;
+
+	if (MultWithBase)
+		cout << "Multiplication with base good" << endl;
 
 	return 0;
 }
-

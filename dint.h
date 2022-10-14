@@ -70,6 +70,9 @@ namespace bigint
 		friend bool operator==(const dint &, const dint &);
 
 		friend dint operator*(const dint&, const dint&);
+		friend dint operator*(const dint&, base);
+
+		void operator*=(base);
 
 		string toHexString() const;
 
@@ -97,6 +100,7 @@ namespace bigint
 
 		static void mult(const container &&a, const container &&b, container &dest);
 		static void basicmult(const container&&, const container&&, container&);
+		static base basicmult(container::iterator&&, container::iterator&&, base);
 		static void karatsuba(container::iterator&&, container::iterator&&, container::iterator&&, container::iterator&&, container::iterator, container::iterator, size_t);
 
 		static void add(const container &&a, const container &&b, container &dest, const bool incr);
