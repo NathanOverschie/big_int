@@ -2,49 +2,102 @@
 
 namespace bigint
 {
-	inline base hi(base x)
+	namespace
 	{
-		return x >> (bits_per_word / 2);
-	}
-
-	inline base lo(base x)
-	{
-		return ((1ULL << (bits_per_word / 2)) - 1) & x;
-	}
-
-	/**
-	 * @brief
-	 *
-	 * @param a_begin
-	 * @param a_end
-	 * @param b_begin
-	 * @param b_end
-	 * @param dest_begin
-	 * @param dest_end
-	 * @pre{dest.size = a.size + b.size}
-	 */
-	void dint::basicmult(const container &&a, const container &&b, container &dest)
-	{
-		size_t sa = a.size();
-		size_t sb = b.size();
-		for (auto &&i : dest)
+		inline base hi(base x)
 		{
-			i = 0;
+			return x >> (bits_per_word / 2);
 		}
 
-		base c, t, tt;
-		base s0, s1, s2, s3;
-		base at, bt;
-
-		for (size_t i = 0; i < sa; i++)
+		inline base lo(base x)
 		{
-			c = 0;
+			return ((1ULL << (bits_per_word / 2)) - 1) & x;
+		}
 
-			for (size_t j = 0; j < sb; j++)
+		/**
+		 * @brief
+		 *
+		 * @param a_begin
+		 * @param a_end
+		 * @param b_begin
+		 * @param b_end
+		 * @param dest_begin
+		 * @param dest_end
+		 * @pre{dest.size = a.size + b.size}
+		 */
+		void basicmult(const container &&a, const container &&b, container &dest)
+		{
+			size_t sa = a.size();
+			size_t sb = b.size();
+			for (auto &&i : dest)
 			{
+				i = 0;
+			}
+
+			base c, t, tt;
+			base s0, s1, s2, s3;
+			base at, bt;
+
+			for (size_t i = 0; i < sa; i++)
+			{
+				c = 0;
+
+				for (size_t j = 0; j < sb; j++)
+				{
+					// Seperate the carry from the remainder
+					at = a[i];
+					bt = b[j];
+
+					base x = lo(at) * lo(bt);
+					s0 = lo(x);
+
+					x = hi(at) * lo(bt) + hi(x);
+					s1 = lo(x);
+					s2 = hi(x);
+
+					x = s1 + lo(at) * hi(bt);
+					s1 = lo(x);
+
+					x = s2 + hi(at) * hi(bt) + hi(x);
+					s2 = lo(x);
+					s3 = hi(x);
+
+					// Remainder
+					t = (s1 << bits_per_word / 2) | s0;
+
+					tt = t + c;
+
+					dest[i + j] += tt;
+					// Carry from the addition
+					if (tt < t)
+						c = 1;
+					else
+						c = 0;
+
+					// Carry from the addition
+					if (dest[i + j] < tt)
+						c++;
+
+					// Carry from the multiplication
+					c += (s3 << bits_per_word / 2) | s2;
+				}
+				dest[i + sb] = c;
+			}
+		}
+
+		base basicmult(container::iterator &&begin, container::iterator &&end, base x)
+		{
+			base c, t, tt;
+			base s0, s1, s2, s3;
+			base at, bt;
+
+			c = 0;
+			for (auto p = begin; p != end; ++p)
+			{
+
 				// Seperate the carry from the remainder
-				at = a[i];
-				bt = b[j];
+				at = *p;
+				bt = x;
 
 				base x = lo(at) * lo(bt);
 				s0 = lo(x);
@@ -65,7 +118,7 @@ namespace bigint
 
 				tt = t + c;
 
-				dest[i + j] += tt;
+				*p = tt;
 				// Carry from the addition
 				if (tt < t)
 					c = 1;
@@ -73,65 +126,16 @@ namespace bigint
 					c = 0;
 
 				// Carry from the addition
-				if (dest[i + j] < tt)
+				if (*p < tt)
 					c++;
 
 				// Carry from the multiplication
 				c += (s3 << bits_per_word / 2) | s2;
 			}
-			dest[i + sb] = c;
-		}
-	}
 
-	base dint::basicmult(container::iterator &&begin, container::iterator &&end, base x)
-	{
-		base c, t, tt;
-		base s0, s1, s2, s3;
-		base at, bt;
-
-		c = 0;
-		for (auto p = begin; p != end; ++p)
-		{
-
-			// Seperate the carry from the remainder
-			at = *p;
-			bt = x;
-
-			base x = lo(at) * lo(bt);
-			s0 = lo(x);
-
-			x = hi(at) * lo(bt) + hi(x);
-			s1 = lo(x);
-			s2 = hi(x);
-
-			x = s1 + lo(at) * hi(bt);
-			s1 = lo(x);
-
-			x = s2 + hi(at) * hi(bt) + hi(x);
-			s2 = lo(x);
-			s3 = hi(x);
-
-			// Remainder
-			t = (s1 << bits_per_word / 2) | s0;
-
-			tt = t + c;
-
-			*p = tt;
-			// Carry from the addition
-			if (tt < t)
-				c = 1;
-			else
-				c = 0;
-
-			// Carry from the addition
-			if (*p < tt)
-				c++;
-
-			// Carry from the multiplication
-			c += (s3 << bits_per_word / 2) | s2;
+			return c;
 		}
 
-		return c;
 	}
 
 	/**
@@ -169,6 +173,11 @@ namespace bigint
 
 			return;
 		}
+
+		if (n % 2 == 1)
+		{
+		}
+
 		// buff[i] = [dest_begin + (i * n/2), dest_begin + (i * n/2) + n/2]
 		auto dest_1 = dest_0 + n / 2;
 		auto dest_2 = dest_1 + n / 2;
