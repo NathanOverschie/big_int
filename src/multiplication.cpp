@@ -273,22 +273,59 @@ namespace bigint
 		return;
 	}
 
+	/**
+	 * @brief
+	 *
+	 * @param a_begin
+	 * @param a_end
+	 * @param b_begin
+	 * @param b_end
+	 * @param dest_begin
+	 * @param dest_end
+	 * @pre{dest.size() == a.size() + b.size()}
+	 */
+	void dint::mult(container::iterator &&a_begin, container::iterator &&a_end, container::iterator &&b_begin, container::iterator &&b_end, container::iterator dest_begin, container::iterator dest_end)
+	{
+		size_t n = a_end - a_begin;
+		size_t m = b_end - b_begin;
+
+		if (n == m)
+		{
+			karatsuba(move(a_begin), move(a_end), move(b_begin), move(b_end), dest_begin, dest_end, n);
+			return;
+		}
+
+		if (n < m)
+		{
+			swap(a_begin, b_begin);
+			swap(a_end, b_end);
+			swap(n, m);
+		}
+
+		// a = a_hi << m + a_lo
+		// b = b_lo
+		// a * b = a_hi * b_lo << m + a_lo * b_lo
+
+		auto a_mid = a_begin + m;
+		auto dest_mid = dest_begin + 2 * m;
+
+		karatsuba(move(a_begin), move(a_mid), move(b_begin), move(b_end), dest_begin, dest_mid, m);
+		// a_lo * b_lo -> a[..2m] : 2m
+
+		mult(move(a_mid), move(a_end), move(b_begin), move(b_end), a_begin, a_end);
+		// a_hi * b_lo -> dest[m..] : n
+
+		// Add together
+		additer(dest_mid, dest_end, a_begin, a_end, dest_mid, dest_end, false);
+		// a_hi * b_lo << m + a_lo * b_lo -> dest
+	}
+
 	void dint::mult(const container &&a, const container &&b, container &dest)
 	{
 		container at{a};
 		container bt{b};
 
-		if (a.size() == b.size())
-		{
-			size_t n = a.size();
-
-			karatsuba(at.begin(), at.end(), bt.begin(), bt.end(), dest.begin(), dest.end(), n);
-		}
-		else
-		{
-
-			basicmult(move(at), move(bt), dest);
-		}
+		mult(move(at.begin()), move(at.end()), move(bt.begin()), move(bt.end()), dest.begin(), dest.end());
 	}
 
 	dint operator*(const dint &a, const dint &b)

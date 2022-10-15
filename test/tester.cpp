@@ -187,10 +187,9 @@ int main(int argc, char const *argv[])
 	// 	cout << "Multiplication with base good" << endl;
 
 	dint f = 1;
-	dint n = 40;
-	for (dint i = 1; i <= n; ++i)
+	int n = 1000;
+	for (int i = 1; i <= n; ++i)
 	{
-		cout << f.toHexString() << endl;
 		f *= i;
 	}
 	
