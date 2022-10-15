@@ -164,27 +164,37 @@ bool testMultiplicationWithBase(std::mt19937 gen, size_t n)
 
 int main(int argc, char const *argv[])
 {
-	std::random_device rd;	// Will be used to obtain a seed for the random number engine
-	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
+	// std::random_device rd;	// Will be used to obtain a seed for the random number engine
+	// std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
 
-	size_t n = 100000;
+	// size_t n = 100000;
 
-	bool Add = testAddition(gen, n);
-	bool Sub = testSubstraction(gen, n);
-	bool Mult = testMultiplication(gen, n);
-	bool MultWithBase = testMultiplicationWithBase(gen, n);
+	// bool Add = testAddition(gen, n);
+	// bool Sub = testSubstraction(gen, n);
+	// bool Mult = testMultiplication(gen, n);
+	// bool MultWithBase = testMultiplicationWithBase(gen, n);
 
-	if (Add)
-		cout << "Addition good" << endl;
+	// if (Add)
+	// 	cout << "Addition good" << endl;
 
-	if (Sub)
-		cout << "Substraction good" << endl;
+	// if (Sub)
+	// 	cout << "Substraction good" << endl;
 
-	if (Mult)
-		cout << "Multiplication good" << endl;
+	// if (Mult)
+	// 	cout << "Multiplication good" << endl;
 
-	if (MultWithBase)
-		cout << "Multiplication with base good" << endl;
+	// if (MultWithBase)
+	// 	cout << "Multiplication with base good" << endl;
+
+	dint f = 1;
+	dint n = 40;
+	for (dint i = 1; i <= n; ++i)
+	{
+		cout << f.toHexString() << endl;
+		f *= i;
+	}
+	
+	cout << f.toHexString() << endl;
 
 	return 0;
 }

@@ -144,6 +144,12 @@ namespace bigint
 		// And the notation thing[i] means the i'th word of thing
 		// And the notation a : i means that a is i words long
 
+		if (n == 1)
+		{
+			overflow_product(*a_begin, *b_begin, *dest_0, *dest_4);
+			return;
+		}
+
 		if (n == 2)
 		{
 			// Base case: simple multiplication
@@ -219,9 +225,9 @@ namespace bigint
 		// b_hi : n/2
 		// b_lo : n/2
 
-		//z2 = a_hi * b_hi : n
-		//z1 = a_hi * b_lo + a_hi * b_lo = (a_hi + a_lo) * (b_hi + b_lo) - z2 - z0 : n + 1 (one extra for optional carry)
-		//z0 = a_lo * b_lo : n
+		// z2 = a_hi * b_hi : n
+		// z1 = a_hi * b_lo + a_hi * b_lo = (a_hi + a_lo) * (b_hi + b_lo) - z2 - z0 : n + 1 (one extra for optional carry)
+		// z0 = a_lo * b_lo : n
 
 		// a * b = z2 << n + z1 << n/2 + z0
 
@@ -259,7 +265,7 @@ namespace bigint
 		subiter(b_begin, b_end, dest_0, dest_2, b_begin, b_end, false);
 		// z1 -> b : n
 
-		// Add z1 to dest[n/2..3n/2] 
+		// Add z1 to dest[n/2..3n/2]
 		additer(dest_1, dest_3, b_begin, b_end, dest_1, dest_3, false);
 
 		// z2 << n + z1 << n/2 + z0 -> dest
@@ -269,18 +275,20 @@ namespace bigint
 
 	void dint::mult(const container &&a, const container &&b, container &dest)
 	{
+		container at{a};
+		container bt{b};
 
 		if (a.size() == b.size())
 		{
 			size_t n = a.size();
 
-			container at{a};
-			container bt{a};
-
 			karatsuba(at.begin(), at.end(), bt.begin(), bt.end(), dest.begin(), dest.end(), n);
 		}
+		else
+		{
 
-		basicmult(move(a), move(b), dest);
+			basicmult(move(at), move(bt), dest);
+		}
 	}
 
 	dint operator*(const dint &a, const dint &b)
@@ -302,6 +310,11 @@ namespace bigint
 		{
 			data.push_back(c);
 		}
+	}
+
+	void dint::operator*=(const dint &a)
+	{
+		*this = (*this * a);
 	}
 
 	dint operator*(const dint &a, base b)

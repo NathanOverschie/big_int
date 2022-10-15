@@ -19,7 +19,7 @@ LIB := -L bin
 INC := -I include
 RPATH := -Wl,-rpath ./bin
 
-$(TARGET).so: $(OBJECTS)
+$(TARGET): $(OBJECTS)
 	@echo " Linking..."
 	@echo " $(CC) -shared $^ -o $(TARGET) $(LIB)"; $(CC) -shared $^ -o $(TARGET) $(LIB)
 
@@ -36,7 +36,7 @@ $(TESTOBJECTS):$(BUILDDIR)/%.o: $(TESTDIR)/%.$(SRCEXT)
 	@echo " $(CC) $(CFLAGS) $(INC) -c -o $@ $<"; $(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
 # Tests
-tester: $(TESTOBJECTS) $(TARGET)
+bin/tester: $(TESTOBJECTS) $(TARGET)
 	$(CC) $(CFLAGS) $(TESTOBJECTS) -l$(LIBNAME) $(INC) $(LIB) $(RPATH) -o bin/tester
 
 

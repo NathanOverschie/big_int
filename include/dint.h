@@ -72,6 +72,7 @@ namespace bigint
 		friend dint operator*(const dint&, const dint&);
 		friend dint operator*(const dint&, base);
 
+		void operator*=(const dint&);
 		void operator*=(base);
 
 		string toHexString() const;

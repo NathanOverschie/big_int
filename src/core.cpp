@@ -8,7 +8,6 @@ namespace bigint
 	{
 		int words = sizeof(unsigned long long) / sizeof(base);
 
-
 		for (size_t i = 0; i < words && arg != 0ULL; i++)
 		{
 			data.push_back(static_cast<base>(arg));
@@ -278,12 +277,16 @@ namespace bigint
 		auto q = data.rbegin();
 		for (; q != data.rend(); q++)
 		{
-			if(*q != 0){
+			if (*q != 0)
+			{
 				break;
 			}
 		}
 
-		data.erase(q.base(), data.end());
+		if (q != data.rend())
+		{
+			data.erase(q.base(), data.end());
+		}
 	}
 
 	/**
