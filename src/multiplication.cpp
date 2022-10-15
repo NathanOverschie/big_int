@@ -140,9 +140,17 @@ namespace bigint
 	 */
 	void dint::karatsuba(container::iterator &&a_begin, container::iterator &&a_end, container::iterator &&b_begin, container::iterator &&b_end, container::iterator dest_0, container::iterator dest_4, size_t n)
 	{
+		// In this function I will use the notation '<<' and '>>' to mean shift word left and shift word right
+		// And the notation thing[i] means the i'th word of thing
+		// And the notation a : i means that a is i words long
 
 		if (n == 2)
 		{
+			// Base case: simple multiplication
+			// a : 2
+			// b : 2
+			// dest : 4
+
 			container a{*a_begin, *a_end};
 			container b{*b_begin, *b_end};
 			container dest(4);
@@ -160,7 +168,62 @@ namespace bigint
 
 		if (n % 2 == 1)
 		{
+			// a = a_big << 1 + a_small
+			// b = b_big << 1 + b_small
+			// a : n
+			// b : n
+			// a_big : n - 1 (even)
+			// a_small : 1
+			// b_big : n - 1 (even)
+			// b_small : 1
+
+			// a * b = a_big * b_big << 2 + (a_big * b_small + a_small * b_big) << 1 + a_small * b_small
+
+			base lo, hi;
+
+			base a_s = *a_begin;
+			base b_s = *b_begin;
+
+			overflow_product(a_s, b_s, lo, hi);
+			// a_small * b_small -> [lo, hi] : 2
+
+			a_s += basicmult(move(a_begin + 1), move(a_end), *b_begin);
+			// a_big * b_small -> a : n
+
+			b_s += basicmult(move(b_begin + 1), move(b_end), *a_begin);
+			// b_big * a_small -> b : n
+
+			karatsuba(a_begin + 1, move(a_end), b_begin + 1, move(b_end), dest_0 + 2, dest_4, n - 1);
+			// a_big * b_big -> dest[2..]
+
+			*dest_0 = lo;
+			*(dest_0 + 1) = hi;
+			// a_small * b_small -> dest[0, 1]
+
+			// a_big * b_big << 2 + a_small * b_small -> dest
+
+			// Add a_(big * b_small + a_small * b_big) << 1 to dest
+			additer(dest_0 + 1, dest_4, a_begin, a_end, dest_0 + 1, dest_4, false);
+			additer(dest_0 + 1, dest_4, b_begin, b_end, dest_0 + 1, dest_4, false);
+			// a_big * b_big << 2 + (a_big * b_small + a_small * b_big) << 1 + a_small * b_small -> dest
+
+			return;
 		}
+
+		// a = a_hi << n/2 + a_lo
+		// b = b_hi << n/2 + b_lo
+		// a : n
+		// b : n
+		// a_hi : n/2
+		// a_lo : n/2
+		// b_hi : n/2
+		// b_lo : n/2
+
+		//z2 = a_hi * b_hi : n
+		//z1 = a_hi * b_lo + a_hi * b_lo = (a_hi + a_lo) * (b_hi + b_lo) - z2 - z0 : n + 1 (one extra for optional carry)
+		//z0 = a_lo * b_lo : n
+
+		// a * b = z2 << n + z1 << n/2 + z0
 
 		// buff[i] = [dest_begin + (i * n/2), dest_begin + (i * n/2) + n/2]
 		auto dest_1 = dest_0 + n / 2;
@@ -171,46 +234,37 @@ namespace bigint
 		auto a_mid = a_begin + n / 2;
 		auto b_mid = b_begin + n / 2;
 
-		if (n % 2 == 1)
-		{
-			n--;
-			a_mid = a_begin + 1;
-			b_mid = b_begin + 1;
+		// Calc z2
+		karatsuba(move(a_mid), move(a_end), move(b_mid), move(b_end), dest_2, dest_3, n / 2);
+		// z2 = a_hi * b_hi -> dest[n..] : n
 
-			dest_1 = dest_0 + 1;
-			dest_2 = dest_1 + 1;
-			dest_3 = dest_2 + n;
-		}
-		else
-		{
+		// Calc z0
+		karatsuba(move(a_begin), move(a_mid), move(b_begin), move(b_mid), dest_0, dest_1, n / 2);
+		// z0 = a_lo * b_lo -> buff[..n] : n
 
-			// z2 = a_hi * b_hi -> dest[2, 3]
-			karatsuba(move(a_mid), move(a_end), move(b_mid), move(b_end), dest_2, dest_3, n / 2);
+		// z2 << n + z0 -> dest
 
-			// z0 = a_lo * b_lo -> buff[0, 1]
-			karatsuba(move(a_begin), move(a_mid), move(b_begin), move(b_mid), dest_0, dest_1, n / 2);
+		// @todo I dont care about the carries here
+		additer(move(a_mid), move(a_end), move(a_begin), move(a_mid), a_mid, a_end, false);
+		// a_hi + a_lo -> a[..n/2] : n/2
 
-			// a_hi + a_lo -> a_hi
-			additer(move(a_mid), move(a_end), move(a_begin), move(a_mid), a_mid, a_end, false);
+		additer(move(b_mid), move(b_end), move(b_begin), move(b_mid), a_begin, a_mid, false);
+		// b_hi + b_lo -> a[n/2..] : n/2
 
-			// b_hi + b_lo -> a_lo
-			additer(move(b_mid), move(b_end), move(b_begin), move(b_mid), a_begin, a_mid, false);
+		karatsuba(move(a_mid), move(a_end), move(a_begin), move(a_end), b_begin, b_end, n / 2);
+		// (a_hi * a_lo) * (b_hi * b_lo) -> b : n
 
-			// a_hi * a_lo = (a_hi + a_lo) * (b_hi + b_lo) -> b
-			karatsuba(move(a_mid), move(a_end), move(a_begin), move(a_end), b_begin, b_end, n / 2);
+		// Substract z0 and z2 from (a_hi * a_lo) * (b_hi * b_lo) to get z1
+		subiter(b_begin, b_end, dest_2, dest_4, b_begin, b_end, false);
+		subiter(b_begin, b_end, dest_0, dest_2, b_begin, b_end, false);
+		// z1 -> b : n
 
-			// z1:
-			//		b -= z2
-			subiter(b_begin, b_end, dest_2, dest_4, b_begin, b_end, false);
+		// Add z1 to dest[n/2..3n/2] 
+		additer(dest_1, dest_3, b_begin, b_end, dest_1, dest_3, false);
 
-			//		b -= z0
-			subiter(b_begin, b_end, dest_0, dest_2, b_begin, b_end, false);
+		// z2 << n + z1 << n/2 + z0 -> dest
 
-			// dest[1,2] += z1
-			additer(dest_1, dest_3, b_begin, b_end, dest_1, dest_3, false);
-
-			return;
-		}
+		return;
 	}
 
 	void dint::mult(const container &&a, const container &&b, container &dest)
