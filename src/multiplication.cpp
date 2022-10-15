@@ -146,7 +146,7 @@ namespace bigint
 
 		if (n == 1)
 		{
-			overflow_product(*a_begin, *b_begin, *dest_0, *dest_4);
+			overflow_product(*a_begin, *b_begin, *dest_0, *(dest_0 + 1));
 			return;
 		}
 
