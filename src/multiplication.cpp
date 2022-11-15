@@ -261,8 +261,8 @@ namespace bigint
 		// (a_hi * a_lo) * (b_hi * b_lo) -> b : n
 
 		// Substract z0 and z2 from (a_hi * a_lo) * (b_hi * b_lo) to get z1
-		subiter(b_begin, b_end, dest_2, dest_4, b_begin, b_end, false);
-		subiter(b_begin, b_end, dest_0, dest_2, b_begin, b_end, false);
+		subiter(b_begin, b_end, dest_2, dest_4, b_begin, b_end, nullptr, false);
+		subiter(b_begin, b_end, dest_0, dest_2, b_begin, b_end, nullptr, false);
 		// z1 -> b : n
 
 		// Add z1 to dest[n/2..3n/2]
