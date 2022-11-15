@@ -39,15 +39,8 @@ namespace bigint
 			c = (*pdest >= c ? 0 : 1);
 		}
 
-		// Optionally add an extra word to store the leftover carry bit in.
-		if (c == 1 && pbig == big_end)
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
+		// Return weither or not there was overflow.
+		return c == 1 && pbig == big_end;
 	}
 
 	/**
@@ -70,13 +63,14 @@ namespace bigint
 		}
 	}
 
-	container::iterator dint::subiter(
+	bool dint::subiter(
 		container::const_iterator &&big_begin,
 		container::const_iterator &&big_end,
 		container::const_iterator &&small_begin,
 		container::const_iterator &&small_end,
 		container::iterator dest_begin,
 		container::iterator dest_end,
+		container::iterator *pzeros,
 		const bool increment = false)
 	{
 		// Initialize the iterators
@@ -84,9 +78,9 @@ namespace bigint
 		auto psmall = small_begin;
 		auto pdest = dest_begin;
 
-		// Iterator for checking leading zeros for substraction
-		container::iterator pzeros;
 		bool zeros = false;
+
+		const bool check_zero(pzeros != nullptr);
 
 		base t;
 		// Initialize the carry bit (can be one initially)
@@ -99,17 +93,20 @@ namespace bigint
 			*pdest = *pbig - *psmall - c;
 			c = (*pdest <= t ? 0 : 1);
 
-			if (*pdest == 0)
+			if (check_zero)
 			{
-				if (!zeros)
+				if (*pdest == 0)
 				{
-					pzeros = pdest;
-					zeros = true;
+					if (!zeros)
+					{
+						*pzeros = pdest;
+						zeros = true;
+					}
 				}
-			}
-			else
-			{
-				zeros = false;
+				else
+				{
+					zeros = false;
+				}
 			}
 		}
 
@@ -120,22 +117,25 @@ namespace bigint
 			*pdest = t - c;
 			c = (*pdest <= t ? 0 : 1);
 
-			if (*pdest == 0)
+			if (check_zero)
 			{
-				if (!zeros)
+				if (*pdest == 0)
 				{
-					pzeros = pdest;
-					zeros = true;
+					if (!zeros)
+					{
+						*pzeros = pdest;
+						zeros = true;
+					}
 				}
-			}
-			else
-			{
-				zeros = false;
+				else
+				{
+					zeros = false;
+				}
 			}
 		}
 
-		// Remove leading zeros
-		return pzeros;
+		// Return weither or not there was underflow.
+		return c == 1 && pbig == big_end;
 	}
 
 	/**
@@ -152,9 +152,11 @@ namespace bigint
 	 */
 	void dint::sub(const container &&big, const container &&small, container &dest, const bool increment = false)
 	{
-		auto pzeros = subiter(big.cbegin(), big.cend(), small.cbegin(), small.cend(), dest.begin(), dest.end(), increment);
+		container::iterator *pzero = new container::iterator{};
 
-		dest.erase(pzeros, dest.end());
+		subiter(big.cbegin(), big.cend(), small.cbegin(), small.cend(), dest.begin(), dest.end(), pzero, increment);
+
+		dest.erase(*pzero, dest.end());
 	}
 
 	/**
@@ -244,7 +246,9 @@ namespace bigint
 			if (sa >= sb)
 			{
 				dint::add(move(a.data), move(b.data), res.data);
-			}else{
+			}
+			else
+			{
 				dint::add(move(b.data), move(a.data), res.data);
 			}
 		}

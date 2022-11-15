@@ -107,7 +107,7 @@ namespace bigint
 		static bool additer(container::const_iterator &&, container::const_iterator &&, container::const_iterator &&, container::const_iterator &&, container::iterator, container::iterator, const bool);
 
 		static void sub(const container &&a, const container &&b, container &dest, const bool incr);
-		static container::iterator subiter(container::const_iterator &&, container::const_iterator &&, container::const_iterator &&, container::const_iterator &&, container::iterator, container::iterator, const bool);
+		static bool subiter(container::const_iterator &&, container::const_iterator &&, container::const_iterator &&, container::const_iterator &&, container::iterator, container::iterator, container::iterator *, const bool);
 
 		static bool absgrt(const dint &, const dint &);
 		static bool abslst(const dint &, const dint &);
