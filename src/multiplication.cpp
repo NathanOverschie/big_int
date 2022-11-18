@@ -87,39 +87,38 @@ namespace bigint
 				dest[i + sb] = c;
 			}
 		}
+	}
 
-		base basicmult(container::iterator &&begin, container::iterator &&end, base x)
+	base basicmult(container::iterator p, const container::iterator &end, base x)
+	{
+		base c, t;
+		base lo, hi;
+
+		c = 0;
+		for (; p != end; ++p)
 		{
-			base c, t;
-			base lo, hi;
+			// Seperate the carry from the remainder
+			overflow_product(*p, x, lo, hi);
 
-			c = 0;
-			for (auto p = begin; p != end; ++p)
-			{
-				// Seperate the carry from the remainder
-				overflow_product(*p, x, lo, hi);
+			// Remainder
+			t = lo + c;
 
-				// Remainder
-				t = lo + c;
+			*p = t;
+			// Carry from the addition
+			if (t < lo)
+				c = 1;
+			else
+				c = 0;
 
-				*p = t;
-				// Carry from the addition
-				if (t < lo)
-					c = 1;
-				else
-					c = 0;
+			// Carry from the addition
+			if (*p < t)
+				c++;
 
-				// Carry from the addition
-				if (*p < t)
-					c++;
-
-				// Carry from the multiplication
-				c += hi;
-			}
-
-			return c;
+			// Carry from the multiplication
+			c += hi;
 		}
 
+		return c;
 	}
 
 	/**
@@ -132,89 +131,164 @@ namespace bigint
 	 * @param dest_begin
 	 * @param dest_end
 	 * @param n
-	 * @pre{(a_end - a_begin) == n - 1}
-	 * @pre{(b_end - b_begin) == n - 1}
-	 * @pre{dest_end - dest_begin == 2n - 1}
-	 * @pre{n % 2 == 0}
+	 * @pre{(a_end - a_begin) == n}
+	 * @pre{(b_end - b_begin) == n}
+	 * @pre{dest_end - dest_begin == 2n}
+	 * @pre{buff_end - buff_begin == 4n}
 	 * @pre{dest does not overlap with a and b}
+	 * @pre{dest = 0}
 	 */
-	void dint::karatsuba(container::iterator &&a_begin, container::iterator &&a_end, container::iterator &&b_begin, container::iterator &&b_end, container::iterator dest_0, container::iterator dest_4, size_t n)
+	void dint::karatsuba(
+		const container::iterator &big_begin,
+		const container::iterator &big_end,
+		const container::iterator &small_begin,
+		const container::iterator &small_end,
+		container::iterator dest_begin,
+		container::iterator dest_end,
+		const container::iterator &buff_begin,
+		const container::iterator &buff_end,
+		size_t n)
 	{
 		// In this function I will use the notation '<<' and '>>' to mean shift word left and shift word right
 		// And the notation thing[i] means the i'th word of thing
 		// And the notation a : i means that a is i words long
 
+		if (!(n == big_end - big_begin))
+			throw runtime_error("n isnt right size");
+		if (!(n == small_end - small_begin))
+			if (!(dest_end - dest_begin == 2 * n))
+			{
+				throw runtime_error("dest isnt right size");
+			}
+		if (!(buff_end - buff_begin == 4 * n))
+			throw runtime_error("buff isnt right size");
+
+		cout << "a: " << n << " ={";
+		for (auto &&p = container::iterator{big_begin}; p != big_end; p++)
+		{
+			cout << hex << (int)*p << ' ';
+		}
+		cout << "}" << endl;
+
+		cout << "b: " << n << " ={";
+		for (auto &&p = container::iterator{small_begin}; p != small_end; p++)
+		{
+			cout << hex << (int)*p << ' ';
+		}
+		cout << "}" << endl;
+
+		bool b_Nil = true;
+		for (auto &&p = container::iterator{small_begin}; p != small_end; ++p)
+		{
+			if (*p != 0)
+			{
+				b_Nil = false;
+				break;
+			}
+		}
+
+		if (b_Nil)
+		{
+			cout << "dest: " << 2 * n << " ={";
+			for (auto &p = dest_begin; p != dest_end; p++)
+			{
+				*p = 0;
+				cout << hex << (int)*p << ' ';
+			}
+			cout << "}" << endl;
+
+			return;
+		}
+
 		if (n == 1)
 		{
-			overflow_product(*a_begin, *b_begin, *dest_0, *(dest_0 + 1));
-			return;
-		}
+			overflow_product(*big_begin, *small_begin, *dest_begin, *(dest_begin + 1));
 
-		if (n == 2)
-		{
-			// Base case: simple multiplication
-			// a : 2
-			// b : 2
-			// dest : 4
-
-			container a{*a_begin, *a_end};
-			container b{*b_begin, *b_end};
-			container dest(4);
-
-			basicmult(move(a), move(b), dest);
-
-			auto &&p = dest_0;
-			for (int i = 0; i < 4; i++, p++)
+			cout << "dest: " << 2 << " ={";
+			for (auto &&p = dest_begin; p != dest_end; p++)
 			{
-				*p = dest[i];
+				cout << hex << (int)*p << ' ';
 			}
+			cout << "}" << endl;
 
 			return;
 		}
+
+		// if (n == 2)
+		// {
+		// 	// Base case: simple multiplication
+		// 	// a : 2
+		// 	// b : 2
+		// 	// dest : 4
+
+		// 	container a{*a_begin, *a_end};
+		// 	container b{*b_begin, *b_end};
+		// 	container dest(4);
+
+		// 	basicmult(move(a), move(b), dest);
+
+		// 	auto &&p = dest_0;
+		// 	for (int i = 0; i < 4; i++, p++)
+		// 	{
+		// 		*p = dest[i];
+		// 	}
+
+		// 	return;
+		// }
 
 		if (n % 2 == 1)
 		{
+			// ODD n
+
 			// a = a_big << 1 + a_small
 			// b = b_big << 1 + b_small
 			// a : n
 			// b : n
 			// a_big : n - 1 (even)
 			// a_small : 1
-			// b_big : n - 1 (even)
+			// b_big : n - 1
 			// b_small : 1
 
 			// a * b = a_big * b_big << 2 + (a_big * b_small + a_small * b_big) << 1 + a_small * b_small
 
 			base lo, hi;
 
-			base a_s = *a_begin;
-			base b_s = *b_begin;
+			base a_s = *big_begin;
+			base b_s = *small_begin;
 
 			overflow_product(a_s, b_s, lo, hi);
 			// a_small * b_small -> [lo, hi] : 2
 
-			a_s += basicmult(move(a_begin + 1), move(a_end), *b_begin);
+			a_s += basicmult(big_begin + 1, big_end, *small_begin);
 			// a_big * b_small -> a : n
 
-			b_s += basicmult(move(b_begin + 1), move(b_end), *a_begin);
-			// b_big * a_small -> b : n
+			b_s += basicmult(small_begin + 1, small_end, *big_begin);
+			// b_big * a_small -> b : m
 
-			karatsuba(a_begin + 1, move(a_end), b_begin + 1, move(b_end), dest_0 + 2, dest_4, n - 1);
-			// a_big * b_big -> dest[2..]
+			karatsuba(big_begin + 1, big_end, small_begin + 1, small_end, dest_begin + 2, dest_end, buff_begin + 4, buff_end, n - 1);
+			// a_big * b_big -> dest[2..] : 2n - 2
 
-			*dest_0 = lo;
-			*(dest_0 + 1) = hi;
+			*dest_begin = lo;
+			*(dest_begin + 1) = hi;
 			// a_small * b_small -> dest[0, 1]
 
 			// a_big * b_big << 2 + a_small * b_small -> dest
 
 			// Add a_(big * b_small + a_small * b_big) << 1 to dest
-			additer(dest_0 + 1, dest_4, a_begin, a_end, dest_0 + 1, dest_4, false);
-			additer(dest_0 + 1, dest_4, b_begin, b_end, dest_0 + 1, dest_4, false);
+			additer(dest_begin + 1, dest_end, big_begin, big_end, dest_begin + 1, dest_end, false);
+			additer(dest_begin + 1, dest_end, small_begin, small_end, dest_begin + 1, dest_end, false);
 			// a_big * b_big << 2 + (a_big * b_small + a_small * b_big) << 1 + a_small * b_small -> dest
+
+			cout << "dest: " << 2 * n << " ={";
+			for (auto &&p = container::iterator{dest_begin}; p != dest_end; p++)
+			{
+				cout << hex << (int)*p << ' ';
+			}
+			cout << "}" << endl;
 
 			return;
 		}
+		// EVEN n
 
 		// a = a_hi << n/2 + a_lo
 		// b = b_hi << n/2 + b_lo
@@ -225,50 +299,120 @@ namespace bigint
 		// b_hi : n/2
 		// b_lo : n/2
 
+		// dest : 2n
+		// buff : 4n
+
 		// z2 = a_hi * b_hi : n
-		// z1 = a_hi * b_lo + a_hi * b_lo = (a_hi + a_lo) * (b_hi + b_lo) - z2 - z0 : n + 1 (one extra for optional carry)
+		// z1 = a_hi * b_lo + a_lo * b_hi = (a_hi + a_lo) * (b_hi + b_lo) - z2 - z0 : n + 1 (one extra for optional carry)
 		// z0 = a_lo * b_lo : n
 
 		// a * b = z2 << n + z1 << n/2 + z0
 
-		// buff[i] = [dest_begin + (i * n/2), dest_begin + (i * n/2) + n/2]
-		auto dest_1 = dest_0 + n / 2;
-		auto dest_2 = dest_1 + n / 2;
-		auto dest_3 = dest_2 + n / 2;
+		auto big_mid = big_begin + n / 2;
+		auto small_mid = small_begin + n / 2;
 
-		// buff[i] = [buff_0 + (i * n/2), buff_0 + (i * n/2) + n/2]
-		auto a_mid = a_begin + n / 2;
-		auto b_mid = b_begin + n / 2;
+		auto dest_mid = dest_begin + n;
+		auto buff_mid = buff_begin + 2 * n;
+
+		// if b_hi_empty then z2 = 0
 
 		// Calc z2
-		karatsuba(move(a_mid), move(a_end), move(b_mid), move(b_end), dest_2, dest_3, n / 2);
+		karatsuba(move(big_mid), move(big_end), move(small_mid), move(small_end), dest_mid, dest_end, buff_begin, buff_mid, n / 2);
 		// z2 = a_hi * b_hi -> dest[n..] : n
 
 		// Calc z0
-		karatsuba(move(a_begin), move(a_mid), move(b_begin), move(b_mid), dest_0, dest_1, n / 2);
-		// z0 = a_lo * b_lo -> buff[..n] : n
+		karatsuba(move(big_begin), move(big_mid), move(small_begin), move(small_mid), dest_begin, dest_mid, buff_begin, buff_mid, n / 2);
+		// z0 = a_lo * b_lo -> dest[..n] : n
 
 		// z2 << n + z0 -> dest
 
-		// @todo I dont care about the carries here
-		additer(move(a_mid), move(a_end), move(a_begin), move(a_mid), a_mid, a_end, false);
-		// a_hi + a_lo -> a[..n/2] : n/2
+		auto buff_s1 = buff_begin + n / 2;
+		auto buff_s2 = buff_s1 + n / 2;
 
-		additer(move(b_mid), move(b_end), move(b_begin), move(b_mid), a_begin, a_mid, false);
-		// b_hi + b_lo -> a[n/2..] : n/2
+		bool a_carry = additer(move(big_mid), move(big_end), move(big_begin), move(big_mid), buff_s1, buff_s2, false);
+		// a_hi + a_lo -> buff[n/2..n] : n/2
 
-		karatsuba(move(a_mid), move(a_end), move(a_begin), move(a_end), b_begin, b_end, n / 2);
-		// (a_hi * a_lo) * (b_hi * b_lo) -> b : n
+		bool b_carry = additer(move(small_begin), move(small_mid), move(small_mid), move(small_end), buff_begin, buff_s1, false);
+		// b_hi + b_lo -> buff[0..n/2] : n/2
+
+		karatsuba(move(buff_s1), move(buff_s2), move(buff_begin), move(buff_s1), buff_s2, buff_mid, buff_mid, buff_end, n / 2);
+		// (a_hi + a_lo):n/2 * (b_hi + b_lo):n/2 -> buff[n..2n] : n
+		// Since (a_hi + a_lo) and (b_hi + b_lo) could have overflown we need to calculate the overflow of the product.
+
+		int c = 0;
+		if (a_carry && b_carry)
+		{
+			// Both (a_hi + a_lo) and (b_hi + b_lo) have overflown
+			// This means that the product should be :
+			// ((a_hi + a_lo):n/2 + 1 << n/2) * ((b_hi + b_lo):n/2 + 1 << n/2) =
+			//		1 << n + ((a_hi + a_lo):n/2 + (b_hi + b_lo):n/2) << n/2 + (a_hi + a_lo):n/2 * (b_hi + b_lo):n/2
+			// We add the (<< n/2) term of this product here
+			// And c keeps track of the (<< n) term
+			c++;
+			if (additer(buff_s1, buff_s2, buff_s2 + n / 2, buff_s2 + n, buff_s2 + n / 2, buff_s2 + n, false))
+				c++;
+			if (additer(buff_begin, buff_s1, buff_s2 + n / 2, buff_s2 + n, buff_s2 + n / 2, buff_s2 + n, false))
+				c++;
+
+			// 1 << n + ((a_hi + a_lo):n/2 + (b_hi + b_lo):n/2) << n/2 + (a_hi + a_lo):n/2 * (b_hi + b_lo):n/2 = (a_hi + a_lo) * (b_hi + b_lo) -> {buff[n..2n], c} : n + 1
+		}
+		else
+		{
+			if (a_carry)
+			{
+				// Just (a_hi + a_lo) has overflown
+				// This means that the product should be :
+				// (a_hi + a_lo + 1 << n/2) * (b_hi + b_lo) = (b_hi + b_lo) << n/2 + (a_hi + a_lo) * (b_hi + b_lo)
+				// We add the (<< n/2) term of this product here
+				// And c keeps track of the (<< n) term
+				if (additer(buff_begin, buff_s1, buff_s2 + n / 2, buff_s2 + n, buff_s2 + n / 2, buff_s2 + n, false))
+					c++;
+				// ((a_hi + a_lo):n/2 + 1 << n/2) * (b_hi + b_lo):n/2 = (b_hi + b_lo):n/2 << n/2 + (a_hi + a_lo):n/2 * (b_hi + b_lo):n/2
+			}
+			if (b_carry)
+			{
+				// Same as above but other way around
+				if (additer(buff_s1, buff_s2, buff_s2 + n / 2, buff_s2 + n, buff_s2 + n / 2, buff_s2 + n, false))
+					c++;
+			}
+		}
 
 		// Substract z0 and z2 from (a_hi * a_lo) * (b_hi * b_lo) to get z1
-		subiter(b_begin, b_end, dest_2, dest_4, b_begin, b_end, false);
-		subiter(b_begin, b_end, dest_0, dest_2, b_begin, b_end, false);
+		if (subiter(buff_s2, buff_mid, dest_begin, dest_mid, buff_s2, buff_mid, nullptr, false))
+		{
+			c--;
+			cout << "\t\t\tunderflow" << endl;
+			// If there is underflow adjust the (<<n) term
+		}
+
+		if (subiter(buff_s2, buff_mid, dest_mid, dest_end, buff_s2, buff_mid, nullptr, false))
+		{
+			c--;
+			cout << "\t\t\tunderflow" << endl;
+			// If there is underflow adjust the (<<n) term
+		}
+
 		// z1 -> b : n
 
-		// Add z1 to dest[n/2..3n/2]
-		additer(dest_1, dest_3, b_begin, b_end, dest_1, dest_3, false);
+		auto dest_q1 = dest_begin + n / 2;
+		auto dest_q3 = dest_mid + n / 2;
 
+		// Add z1 to dest[n/2..3n/2]
+		additer(dest_q1, dest_end, buff_s2, buff_mid, dest_q1, dest_end, false);
 		// z2 << n + z1 << n/2 + z0 -> dest
+
+		cout << "		count: " << dec << c << endl;
+		if (c == 1)
+		{
+			additer(dest_q3, dest_end, Nil.data.begin(), Nil.data.end(), dest_q3, dest_end, true);
+		}
+
+		cout << "dest: " << 2 * n << " ={";
+		for (auto &&p = container::iterator{dest_begin}; p != dest_end; p++)
+		{
+			cout << hex << (int)*p << ' ';
+		}
+		cout << "}" << endl;
 
 		return;
 	}
@@ -284,56 +428,61 @@ namespace bigint
 	 * @param dest_end
 	 * @pre{dest.size() == a.size() + b.size()}
 	 */
-	void dint::mult(container::iterator &&a_begin, container::iterator &&a_end, container::iterator &&b_begin, container::iterator &&b_end, container::iterator dest_begin, container::iterator dest_end)
+	void dint::mult(container::iterator &&a_begin, container::iterator &&a_end, container::iterator &&b_begin, container::iterator &&b_end, container::iterator dest_begin, container::iterator dest_end, container::iterator &&buff_begin, container::iterator &&buff_end)
 	{
 		size_t n = a_end - a_begin;
-		size_t m = b_end - b_begin;
 
-		if (n == m)
-		{
-			karatsuba(move(a_begin), move(a_end), move(b_begin), move(b_end), dest_begin, dest_end, n);
-			return;
-		}
-
-		if (n < m)
-		{
-			swap(a_begin, b_begin);
-			swap(a_end, b_end);
-			swap(n, m);
-		}
-
-		// a = a_hi << m + a_lo
-		// b = b_lo
-		// a * b = a_hi * b_lo << m + a_lo * b_lo
-
-		auto a_mid = a_begin + m;
-		auto dest_mid = dest_begin + 2 * m;
-
-		karatsuba(move(a_begin), move(a_mid), move(b_begin), move(b_end), dest_begin, dest_mid, m);
-		// a_lo * b_lo -> a[..2m] : 2m
-
-		mult(move(a_mid), move(a_end), move(b_begin), move(b_end), a_begin, a_end);
-		// a_hi * b_lo -> dest[m..] : n
-
-		// Add together
-		additer(dest_mid, dest_end, a_begin, a_end, dest_mid, dest_end, false);
-		// a_hi * b_lo << m + a_lo * b_lo -> dest
+		dint::karatsuba(move(a_begin), move(a_end), move(b_begin), move(b_end), dest_begin, dest_end, buff_begin, buff_end, n);
 	}
 
 	void dint::mult(const container &&a, const container &&b, container &dest)
 	{
+		size_t sa = a.size();
+		size_t sb = b.size();
+
 		container at{a};
 		container bt{b};
 
-		mult(move(at.begin()), move(at.end()), move(bt.begin()), move(bt.end()), dest.begin(), dest.end());
+		container buff;
+
+		if (sa >= sb)
+		{
+			bt.resize(sa);
+			buff.resize(sa * 4);
+			mult(move(at.begin()), move(at.end()), move(bt.begin()), move(bt.end()), dest.begin(), dest.end(), move(buff.begin()), move(buff.end()));
+		}
+		else
+		{
+			at.resize(sb);
+			buff.resize(sb * 4);
+			mult(move(bt.begin()), move(bt.end()), move(at.begin()), move(at.end()), dest.begin(), dest.end(), move(buff.begin()), move(buff.end()));
+		}
 	}
 
 	dint operator*(const dint &a, const dint &b)
 	{
 		dint res;
-		res.data = container(a.size() + b.size());
 
-		dint::mult(move(a.data), move(b.data), res.data);
+		size_t sa = a.data.size();
+		size_t sb = b.data.size();
+
+		container at{a.data};
+		container bt{b.data};
+
+		if (sa >= sb)
+		{
+			bt.resize(sa);
+			res.data = container(2 * sa);
+		}
+		else
+		{
+			at.resize(sb);
+			res.data = container(2 * sb);
+		}
+
+		container &dest = res.data;
+
+		dint::mult(move(at), move(bt), dest);
 
 		res.remove_leading_zeros();
 

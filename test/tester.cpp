@@ -162,23 +162,63 @@ bool testMultiplicationWithBase(std::mt19937 gen, size_t n)
 	return true;
 }
 
+bool testMultiplicationSimple(std::mt19937 gen, size_t n)
+{
+	std::uniform_int_distribution<unsigned long long> distriba(1UL << (sizeof(base) * __CHAR_BIT__ * 3), 1UL << (sizeof(base) * __CHAR_BIT__ * 4));
+	std::uniform_int_distribution<unsigned long long> distribb(0, 1UL << (sizeof(base) * __CHAR_BIT__ * 4));
+
+	unsigned long long a, b, s;
+
+	dint da, db, ds;
+
+	for (size_t i = 0; i < n; i++)
+	{
+		a = distriba(gen);
+		b = distribb(gen);
+		s = a * b;
+
+		da = dint(a);
+		db = dint(b);
+		ds = da * db;
+
+		cout << a << '*' << b << '=' << s << endl;
+
+		if (dint{s} != ds)
+		{
+			cout << "error" << endl;
+			cout << "n = " << dec << i << endl;
+
+			cout << "a: " << hex << a << endl;
+			cout << "b: " << hex << b << endl;
+
+			cout << "ds: \t" << ds.toHexString() << endl;
+			cout << "s: \t" << dint{s}.toHexString() << endl;
+
+			return false;
+		}
+	}
+
+	return true;
+}
+
 int main(int argc, char const *argv[])
 {
-	// std::random_device rd;	// Will be used to obtain a seed for the random number engine
-	// std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
+	std::random_device rd;	// Will be used to obtain a seed for the random number engine
+	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
 
-	// size_t n = 100000;
+	size_t n = 100000;
 
 	// bool Add = testAddition(gen, n);
-	// bool Sub = testSubstraction(gen, n);
+	bool Sub = testSubstraction(gen, n);
 	// bool Mult = testMultiplication(gen, n);
 	// bool MultWithBase = testMultiplicationWithBase(gen, n);
+	bool MultSimple = testMultiplicationSimple(gen, n);
 
 	// if (Add)
 	// 	cout << "Addition good" << endl;
 
-	// if (Sub)
-	// 	cout << "Substraction good" << endl;
+	if (Sub)
+		cout << "Substraction good" << endl;
 
 	// if (Mult)
 	// 	cout << "Multiplication good" << endl;
@@ -186,14 +226,24 @@ int main(int argc, char const *argv[])
 	// if (MultWithBase)
 	// 	cout << "Multiplication with base good" << endl;
 
-	dint f = 1;
-	int n = 1000;
-	for (int i = 1; i <= n; ++i)
-	{
-		f *= i;
-	}
-	
-	cout << f.toHexString() << endl;
+	if (MultSimple)
+		cout << "Multiplication with numbers of size of a power of 2 good" << endl;
+
+	// dint f = 1;
+	// int n = 1000;
+	// for (int i = 1; i <= n; ++i)
+	// {
+	// 	f *= dint{i};
+	// }
+
+	// cout << f.toHexString() << endl;
+
+	// dint x = {{0x23, 0x43, 0xf4, 0x21}};
+	// dint y = {{0xe3, 0xa4, 0x45, 0xaa}};
+
+	// dint z = x * y;
+
+	// cout << z.toHexString() << endl;
 
 	return 0;
 }

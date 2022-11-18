@@ -26,7 +26,7 @@ namespace bigint
 		dint(const dint &) = default;
 		dint(dint &&) = default;
 		dint(unsigned long long);
-		explicit dint(long long);
+		// explicit dint(long long);
 		dint(const container &);
 		dint(container &&);
 
@@ -60,19 +60,19 @@ namespace bigint
 		dint &operator>>=(unsigned int);
 
 		friend dint operator+(const dint &, const dint &);
-		friend dint& operator+(const dint &, dint &&);
+		friend dint &operator+(const dint &, dint &&);
 
 		friend dint operator-(const dint &, const dint &);
-		friend dint& operator-(const dint &, dint &&);
+		friend dint &operator-(const dint &, dint &&);
 
 		friend bool operator>(const dint &, const dint &);
 		friend bool operator<(const dint &, const dint &);
 		friend bool operator==(const dint &, const dint &);
 
-		friend dint operator*(const dint&, const dint&);
-		friend dint operator*(const dint&, base);
+		friend dint operator*(const dint &, const dint &);
+		friend dint operator*(const dint &, base);
 
-		void operator*=(const dint&);
+		void operator*=(const dint &);
 		void operator*=(base);
 
 		string toHexString() const;
@@ -100,8 +100,8 @@ namespace bigint
 		void shiftwordsleft(size_t);
 
 		static void mult(const container &&a, const container &&b, container &dest);
-		static void mult(container::iterator&&, container::iterator&&, container::iterator&&, container::iterator&&, container::iterator, container::iterator);
-		static void karatsuba(container::iterator&&, container::iterator&&, container::iterator&&, container::iterator&&, container::iterator, container::iterator, size_t);
+		static void mult(container::iterator &&a_begin, container::iterator &&a_end, container::iterator &&b_begin, container::iterator &&b_end, container::iterator dest_begin, container::iterator dest_end, container::iterator &&buff_begin, container::iterator &&buff_end);
+		static void karatsuba(const container::iterator &, const container::iterator &, const container::iterator &, const container::iterator &, container::iterator, container::iterator, const container::iterator &, const container::iterator &, size_t);
 
 		static void add(const container &&a, const container &&b, container &dest, const bool incr);
 		static bool additer(container::const_iterator &&, container::const_iterator &&, container::const_iterator &&, container::const_iterator &&, container::iterator, container::iterator, const bool);
@@ -112,7 +112,6 @@ namespace bigint
 		static bool absgrt(const dint &, const dint &);
 		static bool abslst(const dint &, const dint &);
 	};
-	
 
 	extern const dint &Nil;
 }
