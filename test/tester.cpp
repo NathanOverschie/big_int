@@ -208,23 +208,23 @@ int main(int argc, char const *argv[])
 
 	size_t n = 100000;
 
-	// bool Add = testAddition(gen, n);
-	bool Sub = testSubstraction(gen, n);
-	// bool Mult = testMultiplication(gen, n);
-	// bool MultWithBase = testMultiplicationWithBase(gen, n);
 	bool MultSimple = testMultiplicationSimple(gen, n);
+	bool Add = testAddition(gen, n);
+	bool Sub = testSubstraction(gen, n);
+	bool Mult = testMultiplication(gen, n);
+	bool MultWithBase = testMultiplicationWithBase(gen, n);
 
-	// if (Add)
-	// 	cout << "Addition good" << endl;
+	if (Add)
+		cout << "Addition good" << endl;
 
 	if (Sub)
 		cout << "Substraction good" << endl;
 
-	// if (Mult)
-	// 	cout << "Multiplication good" << endl;
+	if (Mult)
+		cout << "Multiplication good" << endl;
 
-	// if (MultWithBase)
-	// 	cout << "Multiplication with base good" << endl;
+	if (MultWithBase)
+		cout << "Multiplication with base good" << endl;
 
 	if (MultSimple)
 		cout << "Multiplication with numbers of size of a power of 2 good" << endl;
@@ -244,6 +244,10 @@ int main(int argc, char const *argv[])
 	// dint z = x * y;
 
 	// cout << z.toHexString() << endl;
+	// 	f *= i;
+	// }
+	
+	// cout << f.toHexString() << endl;
 
 	return 0;
 }
