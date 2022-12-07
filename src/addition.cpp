@@ -14,9 +14,9 @@ namespace bigint
 	{
 
 		// Initialize the iterators
-		auto pbig = big_begin;
-		auto psmall = small_begin;
-		auto pdest = dest_begin;
+		auto pbig = container::const_iterator{big_begin};
+		auto psmall = container::const_iterator{small_begin};
+		auto pdest = container::iterator{dest_begin};
 
 		base t;
 		// Initialize the carry bit (can be one initially)
@@ -74,9 +74,9 @@ namespace bigint
 		const bool increment = false)
 	{
 		// Initialize the iterators
-		auto pbig = big_begin;
-		auto psmall = small_begin;
-		auto pdest = dest_begin;
+		auto pbig = container::const_iterator{big_begin};
+		auto psmall = container::const_iterator{small_begin};
+		auto pdest = container::iterator{dest_begin};
 
 		bool zeros = false;
 
