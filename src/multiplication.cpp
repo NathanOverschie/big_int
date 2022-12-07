@@ -153,29 +153,33 @@ namespace bigint
 		// And the notation thing[i] means the i'th word of thing
 		// And the notation a : i means that a is i words long
 
-		if (!(n == big_end - big_begin))
-			throw runtime_error("n isnt right size");
-		if (!(n == small_end - small_begin))
-			if (!(dest_end - dest_begin == 2 * n))
+#if debugprint
+		{
+			if (!(n == big_end - big_begin))
+				throw runtime_error("n isnt right size");
+			if (!(n == small_end - small_begin))
+				if (!(dest_end - dest_begin == 2 * n))
+				{
+					throw runtime_error("dest isnt right size");
+				}
+			if (!(buff_end - buff_begin == 4 * n))
+				throw runtime_error("buff isnt right size");
+
+			cout << "a: " << n << " ={";
+			for (auto &&p = container::iterator{big_begin}; p != big_end; p++)
 			{
-				throw runtime_error("dest isnt right size");
+				cout << hex << (int)*p << ' ';
 			}
-		if (!(buff_end - buff_begin == 4 * n))
-			throw runtime_error("buff isnt right size");
+			cout << "}" << endl;
 
-		cout << "a: " << n << " ={";
-		for (auto &&p = container::iterator{big_begin}; p != big_end; p++)
-		{
-			cout << hex << (int)*p << ' ';
+			cout << "b: " << n << " ={";
+			for (auto &&p = container::iterator{small_begin}; p != small_end; p++)
+			{
+				cout << hex << (int)*p << ' ';
+			}
+			cout << "}" << endl;
 		}
-		cout << "}" << endl;
-
-		cout << "b: " << n << " ={";
-		for (auto &&p = container::iterator{small_begin}; p != small_end; p++)
-		{
-			cout << hex << (int)*p << ' ';
-		}
-		cout << "}" << endl;
+#endif
 
 		bool b_Nil = true;
 		for (auto &&p = container::iterator{small_begin}; p != small_end; ++p)
@@ -196,13 +200,17 @@ namespace bigint
 				*p = 0;
 			}
 
-			cout << "dest: " << 2 * n << " ={";
-			for (auto &p = dest_begin; p != dest_end; p++)
+#if debugprint
 			{
-				*p = 0;
-				cout << hex << (int)*p << ' ';
+				cout << "dest: " << 2 * n << " ={";
+				for (auto &p = dest_begin; p != dest_end; p++)
+				{
+					*p = 0;
+					cout << hex << (int)*p << ' ';
+				}
+				cout << "}" << endl;
 			}
-			cout << "}" << endl;
+#endif
 
 			return;
 		}
@@ -215,12 +223,16 @@ namespace bigint
 			// dest : 2
 			overflow_product(*big_begin, *small_begin, *dest_begin, *(dest_begin + 1));
 
-			cout << "dest: " << 2 << " ={";
-			for (auto &&p = dest_begin; p != dest_end; p++)
+#if debugprint
 			{
-				cout << hex << (int)*p << ' ';
+				cout << "dest: " << 2 << " ={";
+				for (auto &&p = dest_begin; p != dest_end; p++)
+				{
+					cout << hex << (int)*p << ' ';
+				}
+				cout << "}" << endl;
 			}
-			cout << "}" << endl;
+#endif
 
 			return;
 		}
@@ -268,12 +280,16 @@ namespace bigint
 			additer(dest_begin + 1, dest_end, small_begin, small_end, dest_begin + 1, dest_end, false);
 			// a_big * b_big << 2 + (a_big * b_small + a_small * b_big) << 1 + a_small * b_small -> dest
 
-			cout << "dest: " << 2 * n << " ={";
-			for (auto &&p = container::iterator{dest_begin}; p != dest_end; p++)
+#if debugprint
 			{
-				cout << hex << (int)*p << ' ';
+				cout << "dest: " << 2 * n << " ={";
+				for (auto &&p = container::iterator{dest_begin}; p != dest_end; p++)
+				{
+					cout << hex << (int)*p << ' ';
+				}
+				cout << "}" << endl;
 			}
-			cout << "}" << endl;
+#endif
 
 			return;
 		}
@@ -329,14 +345,15 @@ namespace bigint
 		// (a_hi + a_lo):n/2 * (b_hi + b_lo):n/2 -> buff[n..2n] : n
 		// Since (a_hi + a_lo) and (b_hi + b_lo) could have overflown we need to calculate the overflow of the product.
 
-
-		if(additer(dest_begin, dest_mid, dest_mid, dest_end, buff_mid, buff_q3, false)){
+		if (additer(dest_begin, dest_mid, dest_mid, dest_end, buff_mid, buff_q3, false))
+		{
 			*buff_q3 = base{1};
-		}else{
+		}
+		else
+		{
 			*buff_q3 = base{0};
 		}
 		// z0 + z2 -> buff[2n..3n+1] : n + 1
-		
 
 		auto dest_q1 = dest_begin + n / 2;
 		auto dest_q3 = dest_mid + n / 2;
@@ -351,10 +368,14 @@ namespace bigint
 			// We add the (<< n/2) term of this product here
 			// And c keeps track of the (<< n) term
 			additer(dest_q3, dest_end, Nil.data.begin(), Nil.data.end(), dest_q3, dest_end, true);
-			additer(dest_q1 + n/2, dest_end, buff_s1, buff_q1, dest_q1 + n/2, dest_end, false);
-			additer(dest_q1 + n/2, dest_end, buff_begin, buff_s1, dest_q1 + n/2, dest_end, false);
+			additer(dest_q1 + n / 2, dest_end, buff_s1, buff_q1, dest_q1 + n / 2, dest_end, false);
+			additer(dest_q1 + n / 2, dest_end, buff_begin, buff_s1, dest_q1 + n / 2, dest_end, false);
 
-			cout <<  "both carry" << endl;
+#if debugprint
+			{
+				cout << "both carry" << endl;
+			}
+#endif
 
 			// 1 << n + ((a_hi + a_lo):n/2 + (b_hi + b_lo):n/2) << n/2 + (a_hi + a_lo):n/2 * (b_hi + b_lo):n/2 = (a_hi + a_lo) * (b_hi + b_lo) -> {buff[n..2n], c} : n + 1
 		}
@@ -368,16 +389,25 @@ namespace bigint
 				// We add the (<< n/2) term of this product here
 				// And c keeps track of the (<< n) term
 
-				additer(dest_q1 + n/2, dest_end, buff_begin, buff_s1, dest_q1 + n/2, dest_end, false);
+				additer(dest_q1 + n / 2, dest_end, buff_begin, buff_s1, dest_q1 + n / 2, dest_end, false);
 				// ((a_hi + a_lo):n/2 + 1 << n/2) * (b_hi + b_lo):n/2 = (b_hi + b_lo):n/2 << n/2 + (a_hi + a_lo):n/2 * (b_hi + b_lo):n/2
-				cout << "a carry" << endl;
+
+#if debugprint
+				{
+					cout << "a carry" << endl;
+				}
+#endif
 			}
 			if (b_carry)
 			{
 				// Same as above but other way around
-				additer(dest_q1 + n/2, dest_end, buff_s1, buff_q1, dest_q1 + n/2, dest_end, false);
+				additer(dest_q1 + n / 2, dest_end, buff_s1, buff_q1, dest_q1 + n / 2, dest_end, false);
 
-				cout << "b carry" << endl;
+#if debugprint
+				{
+					cout << "b carry" << endl;
+				}
+#endif
 			}
 		}
 
@@ -385,12 +415,17 @@ namespace bigint
 		subiter(dest_q1, dest_end, buff_mid, buff_q3 + 1, dest_q1, dest_end, nullptr, false);
 		// z1 -> b : n
 
-		cout << "dest: " << 2 * n << " ={";
-		for (auto &&p = container::iterator{dest_begin}; p != dest_end; p++)
+#if debugprint
 		{
-			cout << hex << (int)*p << ' ';
+
+			cout << "dest: " << 2 * n << " ={";
+			for (auto &&p = container::iterator{dest_begin}; p != dest_end; p++)
+			{
+				cout << hex << (int)*p << ' ';
+			}
+			cout << "}" << endl;
 		}
-		cout << "}" << endl;
+#endif
 
 		return;
 	}
