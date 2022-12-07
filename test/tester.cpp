@@ -173,23 +173,23 @@ namespace {
 			return ((1ULL << (n / 2)) - 1) & x;
 		}
 
-		unsigned long long printzs(unsigned long long a, unsigned long long b, int bits){
-			cout << hex << a << endl;
-			cout << hex << b << endl;
+		// unsigned long long printzs(unsigned long long a, unsigned long long b, int bits){
+		// 	cout << hex << a << endl;
+		// 	cout << hex << b << endl;
 
-			if(bits == __CHAR_BIT__){
-				return;
-			}
+		// 	if(bits == __CHAR_BIT__){
+		// 		return;
+		// 	}
 
-			unsigned long long z2, z1, z0, ret;
+		// 	unsigned long long z2, z1, z0, ret;
 
-			z2 = printzs(hi_n(a, bits), hi_n(b, bits), bits/2);
-			z0 = printzs(lo_n(a, bits), lo_n(b, bits), bits/2);
+		// 	z2 = printzs(hi_n(a, bits), hi_n(b, bits), bits/2);
+		// 	z0 = printzs(lo_n(a, bits), lo_n(b, bits), bits/2);
 
-			z1 = printzs(hi_n(a, bits) + lo_n(a, bits), hi_n(b, bits) + lo_n(b, bits), bits / 2) - z2 - z0;
+		// 	z1 = printzs(hi_n(a, bits) + lo_n(a, bits), hi_n(b, bits) + lo_n(b, bits), bits / 2) - z2 - z0;
 
-			ret = z2 << bits + z1 << bits/2 + z0;
-		}
+		// 	ret = z2 << bits + z1 << bits/2 + z0;
+		// }
 }
 
 bool testMultiplicationSimple(std::mt19937 gen, size_t n)
