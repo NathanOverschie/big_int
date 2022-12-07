@@ -31,8 +31,10 @@ namespace bigint
 			c = (*pdest >= t + c ? 0 : 1);
 		}
 
+		bool self{big_begin == dest_begin};
+
 		// Second part of the calculation, only one number contributes to the result
-		for (; pbig != big_end && (c == 1 || big_begin != dest_begin); pbig++, pdest++)
+		for (; pbig != big_end && (c == 1 || !self); pbig++, pdest++)
 		{
 
 			*pdest = *pbig + c;
@@ -91,7 +93,8 @@ namespace bigint
 		{
 			t = *pbig;
 			*pdest = *pbig - *psmall - c;
-			c = (*pdest <= t ? 0 : 1);
+
+			c = (*pdest <= t - c ? 0 : 1);
 
 			if (check_zero)
 			{
@@ -110,12 +113,14 @@ namespace bigint
 			}
 		}
 
+		bool self{big_begin == dest_begin};
+
 		// Second part of the calculation, only one number contributes to the result
-		for (; pbig != big_end && (c == 1 || big_begin != dest_begin); pbig++, pdest++)
+		for (; pbig != big_end && (c == 1 || !self); pbig++, pdest++)
 		{
-			t = *pbig;
-			*pdest = t - c;
-			c = (*pdest <= t ? 0 : 1);
+			t = *pdest;
+			*pdest -= c;
+			c = ( t == 0 ? 1 : 0);
 
 			if (check_zero)
 			{
