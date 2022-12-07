@@ -358,7 +358,7 @@ namespace bigint
 
 		auto dest_q1 = dest_begin + n / 2;
 		auto dest_q3 = dest_mid + n / 2;
-		
+
 		additer(dest_q1, dest_end, buff_q1, buff_mid, dest_q1, dest_end, false);
 
 		if (a_carry && b_carry)
@@ -367,21 +367,27 @@ namespace bigint
 			// This means that the product should be :
 			// ((a_hi + a_lo):n/2 + 1 << n/2) * ((b_hi + b_lo):n/2 + 1 << n/2) =
 			//		1 << n + ((a_hi + a_lo):n/2 + (b_hi + b_lo):n/2) << n/2 + (a_hi + a_lo):n/2 * (b_hi + b_lo):n/2
+			// And (a_hi + a_lo):n/2 * (b_hi + b_lo):n/2 is already calculated:
+			// (a_hi + a_lo):n/2 * (b_hi + b_lo):n/2 -> buff[n..2n] : n
+			// We need to add the other terms in the equation above
 			// We add the (1 << n) here
 			additer(dest_q3, dest_end, Nil.data.begin(), Nil.data.end(), dest_q3, dest_end, true);
 			// We add the (<< n/2) term of this product here
 			// add ((a_hi + a_lo) << n/2)
-			additer(dest_q1 + n / 2, dest_end, buff_s1, buff_q1, dest_q1 + n / 2, dest_end, false);
+			additer(dest_mid, dest_end, buff_s1, buff_q1, dest_mid, dest_end, false);
 			// add ((b_hi + b_lo) << n/2)
-			additer(dest_q1 + n / 2, dest_end, buff_begin, buff_s1, dest_q1 + n / 2, dest_end, false);
+			additer(dest_mid, dest_end, buff_begin, buff_s1, dest_mid, dest_end, false);
+			// 1 << n + ((a_hi + a_lo):n/2 + (b_hi + b_lo):n/2) << n/2 + (a_hi + a_lo):n/2 * (b_hi + b_lo):n/2 = (a_hi + a_lo) * (b_hi + b_lo) -> {buff[n..2n], c} : n + 1
 
 #if debugprint
 			{
 				cout << "both carry" << endl;
+				if (Nil.data.size() != 1)
+				{
+					throw runtime_error("help!");
+				}
 			}
 #endif
-
-			// 1 << n + ((a_hi + a_lo):n/2 + (b_hi + b_lo):n/2) << n/2 + (a_hi + a_lo):n/2 * (b_hi + b_lo):n/2 = (a_hi + a_lo) * (b_hi + b_lo) -> {buff[n..2n], c} : n + 1
 		}
 		else
 		{
@@ -391,7 +397,7 @@ namespace bigint
 				// This means that the product should be :
 				// (a_hi + a_lo + 1 << n/2) * (b_hi + b_lo) = (b_hi + b_lo) << n/2 + (a_hi + a_lo) * (b_hi + b_lo)
 				// We add the (<< n/2) term of this product here
-				additer(dest_q1 + n / 2, dest_end, buff_begin, buff_s1, dest_q1 + n / 2, dest_end, false);
+				additer(dest_mid, dest_end, buff_begin, buff_s1, dest_mid, dest_end, false);
 				// ((a_hi + a_lo):n/2 + 1 << n/2) * (b_hi + b_lo):n/2 = (b_hi + b_lo):n/2 << n/2 + (a_hi + a_lo):n/2 * (b_hi + b_lo):n/2
 
 #if debugprint
@@ -403,7 +409,7 @@ namespace bigint
 			if (b_carry)
 			{
 				// Same as above but other way around
-				additer(dest_q1 + n / 2, dest_end, buff_s1, buff_q1, dest_q1 + n / 2, dest_end, false);
+				additer(dest_mid, dest_end, buff_s1, buff_q1, dest_mid, dest_end, false);
 
 #if debugprint
 				{
@@ -413,9 +419,32 @@ namespace bigint
 			}
 		}
 
+#if debugprint
+		cout << "c = " << (int) *buff_q3 << endl;
+
+		cout << "head = " << (int)  *dest_q3 << endl;
+
+
+		for (auto p = dest_begin; p != dest_end; p++)
+		{
+			cout << (int) *p << ' ';
+		}
+		cout << endl;
+
+		for (auto p = buff_mid; p != buff_q3 + 1; p++)
+		{
+			cout << (int) *p << ' ';
+		}
+		cout << endl;
+
+#endif
+
+		//THIS SUBSTRACTION IS WHERE IT GOES WRONG
+
+
 		// Substract z0 and z2 from (a_hi * a_lo) * (b_hi * b_lo) to get z1
 		subiter(dest_q1, dest_end, buff_mid, buff_q3 + 1, dest_q1, dest_end, nullptr, false);
-		// z2 << n + z1 << n/2 + z0 -> dest : n
+		// z2 << n + z1 << n/2 + z0 -> dest : 2n
 
 #if debugprint
 		{
