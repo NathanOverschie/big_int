@@ -33,14 +33,11 @@ bool testAddition(std::mt19937 gen, size_t n)
 			cout << "a: " << hex << a << endl;
 			cout << "b: " << hex << b << endl;
 
-			cout << "s: " << hex << s << endl;
-			cout << "ds: " << ds.toHexString() << endl;
-			cout << "should have been:" << dint{s}.toHexString() << endl;
+			cout << "ds:\t" << ds.toHexString() << endl;
+			cout << "s:\t" << dint{s}.toHexString() << endl;
 
-			return false;
+			throw runtime_error("");
 		}
-
-		// cout << "✓" << endl;
 	}
 
 	return true;
@@ -64,8 +61,6 @@ bool testSubstraction(std::mt19937 gen, size_t n)
 		db = dint(b);
 		ds = da - db;
 
-		// cout << a << '-' << b << '=' << s << endl;
-
 		if (dint{s} != ds)
 		{
 			cout << "error" << endl;
@@ -73,11 +68,10 @@ bool testSubstraction(std::mt19937 gen, size_t n)
 			cout << "a: " << hex << a << endl;
 			cout << "b: " << hex << b << endl;
 
-			cout << "s: " << hex << s << endl;
-			cout << "ds: " << ds.toHexString() << endl;
-			cout << "should have been:" << dint{s}.toHexString() << endl;
+			cout << "ds:\t" << ds.toHexString() << endl;
+			cout << "s:\t" << dint{s}.toHexString() << endl;
 
-			return false;
+			throw runtime_error("");
 		}
 	}
 
@@ -102,20 +96,18 @@ bool testMultiplication(std::mt19937 gen, size_t n)
 		db = dint(b);
 		ds = da * db;
 
-		// cout << a << '*' << b << '=' << s << endl;
-
 		if (dint{s} != ds)
 		{
 			cout << "error" << endl;
+			cout << "n = " << i << endl;
 
 			cout << "a: " << hex << a << endl;
 			cout << "b: " << hex << b << endl;
 
-			cout << "s: " << hex << s << endl;
-			cout << "ds: " << ds.toHexString() << endl;
-			cout << "should have been:" << dint{s}.toHexString() << endl;
+			cout << "ds:\t" << ds.toHexString() << endl;
+			cout << "s:\t" << dint{s}.toHexString() << endl;
 
-			return false;
+			throw runtime_error("");
 		}
 	}
 
@@ -130,7 +122,7 @@ bool testMultiplicationWithBase(std::mt19937 gen, size_t n)
 	unsigned long long a, s;
 	base b;
 
-	dint da, db, ds;
+	dint da, ds;
 
 	for (size_t i = 0; i < n; i++)
 	{
@@ -139,62 +131,29 @@ bool testMultiplicationWithBase(std::mt19937 gen, size_t n)
 		s = a * b;
 
 		da = dint(a);
-		db = dint(static_cast<unsigned long long>(b));
-		ds = da * db;
-
-		// cout << a << '*' << static_cast<int>(b) << '=' << s << endl;
+		ds = da * b;
 
 		if (dint{s} != ds)
 		{
 			cout << "error" << endl;
+			cout << "n = " << i << endl;
 
 			cout << "a: " << hex << a << endl;
 			cout << "b: " << hex << static_cast<int>(b) << endl;
 
-			cout << "s: " << hex << s << endl;
-			cout << "ds: " << ds.toHexString() << endl;
-			cout << "should have been:" << dint{s}.toHexString() << endl;
+			cout << "ds:\t" << ds.toHexString() << endl;
+			cout << "s:\t" << dint{s}.toHexString() << endl;
 
-			return false;
+			throw runtime_error("");
 		}
 	}
 
 	return true;
 }
 
-namespace {
-		inline unsigned long long hi_n(unsigned long long x, int n)
-		{
-			return (x >> (n / 2)) & (1ULL << (n) - 1);
-		}
-
-		inline unsigned long long lo_n(unsigned long long x, int n)
-		{
-			return ((1ULL << (n / 2)) - 1) & x;
-		}
-
-		// unsigned long long printzs(unsigned long long a, unsigned long long b, int bits){
-		// 	cout << hex << a << endl;
-		// 	cout << hex << b << endl;
-
-		// 	if(bits == __CHAR_BIT__){
-		// 		return;
-		// 	}
-
-		// 	unsigned long long z2, z1, z0, ret;
-
-		// 	z2 = printzs(hi_n(a, bits), hi_n(b, bits), bits/2);
-		// 	z0 = printzs(lo_n(a, bits), lo_n(b, bits), bits/2);
-
-		// 	z1 = printzs(hi_n(a, bits) + lo_n(a, bits), hi_n(b, bits) + lo_n(b, bits), bits / 2) - z2 - z0;
-
-		// 	ret = z2 << bits + z1 << bits/2 + z0;
-		// }
-}
-
-bool testMultiplicationSimple(std::mt19937 gen, size_t n)
+bool testMultiplicationSimple(std::mt19937 gen, size_t n, int size)
 {
-	std::uniform_int_distribution<unsigned long long> distrib(0, (1UL << (sizeof(base) * __CHAR_BIT__ * 2)) - 1);
+	std::uniform_int_distribution<unsigned long long> distrib(0, (1UL << (sizeof(base) * __CHAR_BIT__ * size)) - 1);
 
 	unsigned long long a, b, s;
 
@@ -210,8 +169,6 @@ bool testMultiplicationSimple(std::mt19937 gen, size_t n)
 		db = dint(b);
 		ds = da * db;
 
-		// cout << a << '*' << b << '=' << s << endl;
-
 		if (dint{s} != ds)
 		{
 			cout << "error" << endl;
@@ -223,8 +180,7 @@ bool testMultiplicationSimple(std::mt19937 gen, size_t n)
 			cout << "ds: \t" << ds.toHexString() << endl;
 			cout << "s: \t" << dint{s}.toHexString() << endl;
 
-
-			return false;
+			throw runtime_error("");
 		}
 	}
 
@@ -236,39 +192,17 @@ int main(int argc, char const *argv[])
 	std::random_device rd;	// Will be used to obtain a seed for the random number engine
 	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
 
-	size_t n = 100000;
+	size_t n = 1000000;
 
-	bool MultSimple = testMultiplicationSimple(gen, n);
-	// bool Add = testAddition(gen, n);
-	// bool Sub = testSubstraction(gen, n);
-	// bool Mult = testMultiplication(gen, n);
-	// bool MultWithBase = testMultiplicationWithBase(gen, n);
+	testMultiplicationSimple(gen, n, 1);
+	testMultiplicationSimple(gen, n, 2);
+	testMultiplicationSimple(gen, n, 3);
+	testMultiplicationSimple(gen, n, 4);
 
-	// if (Add)
-	// 	cout << "Addition good" << endl;
-
-	// if (Sub)
-	// 	cout << "Substraction good" << endl;
-
-	// if (Mult)
-	// 	cout << "Multiplication good" << endl;
-
-	// if (MultWithBase)
-	// 	cout << "Multiplication with base good" << endl;
-
-	if (MultSimple)
-		cout << "Multiplication with numbers of size 2 good" << endl;
-
-	// dint a{{0x0, 0x0}};
-	// dint b{{0x93, 0xc5}};
-
-	// dint x = a * b;
-
-
-	// cout << a.toHexString() << endl;
-	// cout << b.toHexString() << endl;
-	// cout << x.toHexString() << endl;
-
+	testAddition(gen, n);
+	testSubstraction(gen, n);
+	testMultiplication(gen, n);
+	testMultiplicationWithBase(gen, n);
 
 	return 0;
 }

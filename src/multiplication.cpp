@@ -47,7 +47,10 @@ namespace bigint
 		 * @param dest_end
 		 * @pre{dest.size = a.size + b.size}
 		 */
-		void basicmult(const container &&a, const container &&b, container &dest)
+		void basicmult(
+			const container &&a,
+			const container &&b,
+			container &dest)
 		{
 			size_t sa = a.size();
 			size_t sb = b.size();
@@ -89,6 +92,42 @@ namespace bigint
 		}
 	}
 
+	base basicmult(
+		const container::iterator &begin,
+		const container::iterator &end,
+		base x,
+		const container::iterator &dest_begin,
+		const container::iterator &dest_end)
+	{
+		base c, t;
+		base lo, hi;
+
+		auto p = begin;
+		auto q = dest_begin;
+
+		c = 0;
+		for (; p != end; ++p, ++q)
+		{
+			// Seperate the carry from the remainder
+			overflow_product(*p, x, lo, hi);
+
+			// Remainder
+			t = lo + c;
+
+			*q = t;
+			// Carry from the addition
+			if (t < lo)
+				c = 1;
+			else
+				c = 0;
+
+			// Carry from the multiplication
+			c += hi;
+		}
+
+		return c;
+	}
+
 	base basicmult(container::iterator p, const container::iterator &end, base x)
 	{
 		base c, t;
@@ -109,10 +148,6 @@ namespace bigint
 				c = 1;
 			else
 				c = 0;
-
-			// Carry from the addition
-			if (*p < t)
-				c++;
 
 			// Carry from the multiplication
 			c += hi;
@@ -153,34 +188,6 @@ namespace bigint
 		// And the notation thing[i] means the i'th word of thing
 		// And the notation a : i means that a is i words long
 
-#if debugprint
-		{
-			if (!(n == big_end - big_begin))
-				throw runtime_error("n isnt right size");
-			if (!(n == small_end - small_begin))
-				if (!(dest_end - dest_begin == 2 * n))
-				{
-					throw runtime_error("dest isnt right size");
-				}
-			if (!(buff_end - buff_begin == 4 * n))
-				throw runtime_error("buff isnt right size");
-
-			cout << "a: " << n << " ={";
-			for (auto &&p = container::iterator{big_begin}; p != big_end; p++)
-			{
-				cout << hex << (int)*p << ' ';
-			}
-			cout << "}" << endl;
-
-			cout << "b: " << n << " ={";
-			for (auto &&p = container::iterator{small_begin}; p != small_end; p++)
-			{
-				cout << hex << (int)*p << ' ';
-			}
-			cout << "}" << endl;
-		}
-#endif
-
 		bool b_Nil = true;
 		for (auto &&p = container::iterator{small_begin}; p != small_end; ++p)
 		{
@@ -200,18 +207,6 @@ namespace bigint
 				*p = 0;
 			}
 
-#if debugprint
-			{
-				cout << "dest: " << 2 * n << " ={";
-				for (auto &p = dest_begin; p != dest_end; p++)
-				{
-					*p = 0;
-					cout << hex << (int)*p << ' ';
-				}
-				cout << "}" << endl;
-			}
-#endif
-
 			return;
 		}
 
@@ -222,17 +217,6 @@ namespace bigint
 			// b : 1
 			// dest : 2
 			overflow_product(*big_begin, *small_begin, *dest_begin, *(dest_begin + 1));
-
-#if debugprint
-			{
-				cout << "dest: " << 2 << " ={";
-				for (auto &&p = dest_begin; p != dest_end; p++)
-				{
-					cout << hex << (int)*p << ' ';
-				}
-				cout << "}" << endl;
-			}
-#endif
 
 			return;
 		}
@@ -257,39 +241,42 @@ namespace bigint
 			base a_s = *big_begin;
 			base b_s = *small_begin;
 
+			// Calculate the lowest term
 			overflow_product(a_s, b_s, lo, hi);
 			// a_small * b_small -> [lo, hi] : 2
-
-			a_s += basicmult(big_begin + 1, big_end, *small_begin);
-			// a_big * b_small -> a : n
-
-			b_s += basicmult(small_begin + 1, small_end, *big_begin);
-			// b_big * a_small -> b : m
-
-			karatsuba(big_begin + 1, big_end, small_begin + 1, small_end, dest_begin + 2, dest_end, buff_begin + 4, buff_end, n - 1);
-			// a_big * b_big -> dest[2..] : 2n - 2
 
 			*dest_begin = lo;
 			*(dest_begin + 1) = hi;
 			// a_small * b_small -> dest[0, 1]
 
+			auto buff_s1 = buff_begin + n;
+			auto buff_s2 = buff_s1 + n;
+
+			// Calculate the (<< 2) term
+
+			karatsuba(big_begin + 1, big_end, small_begin + 1, small_end, dest_begin + 2, dest_end, buff_begin + 4, buff_end, n - 1);
+			// a_big * b_big -> dest[2..] : 2n - 2
+
+			// Calculate the (<< 1) term
+
+			// additer(big_begin + 1, big_end, Nil.data.begin(), Nil.data.end(), buff_begin, buff_s1 - 1, false);
+			// additer(small_begin + 1, small_end, Nil.data.begin(), Nil.data.end(), buff_s1, buff_s2 - 1, false);
+			// *(buff_s1 - 1) = basicmult(buff_begin, buff_s1 - 1, *small_begin);
+			// *(buff_s2 - 1) = basicmult(buff_s1, buff_s2 - 1, *big_begin);
+
+			*(buff_s1 - 1) = basicmult(big_begin + 1, big_end, *small_begin, buff_begin, buff_s1 - 1);
+			// a_big * b_small -> buff[0..n+1] : n+1
+
+			*(buff_s2 - 1) = basicmult(small_begin + 1, small_end, *big_begin, buff_s1, buff_s2 - 1);
+			// b_big * a_small -> buff[n+1..n+2] : n+1
+
+
 			// a_big * b_big << 2 + a_small * b_small -> dest
 
 			// Add a_(big * b_small + a_small * b_big) << 1 to dest
-			additer(dest_begin + 1, dest_end, big_begin, big_end, dest_begin + 1, dest_end, false);
-			additer(dest_begin + 1, dest_end, small_begin, small_end, dest_begin + 1, dest_end, false);
+			additer(dest_begin + 1, dest_end, buff_begin, buff_s1, dest_begin + 1, dest_end, false);
+			additer(dest_begin + 1, dest_end, buff_s1, buff_s2, dest_begin + 1, dest_end, false);
 			// a_big * b_big << 2 + (a_big * b_small + a_small * b_big) << 1 + a_small * b_small -> dest
-
-#if debugprint
-			{
-				cout << "dest: " << 2 * n << " ={";
-				for (auto &&p = container::iterator{dest_begin}; p != dest_end; p++)
-				{
-					cout << hex << (int)*p << ' ';
-				}
-				cout << "}" << endl;
-			}
-#endif
 
 			return;
 		}
@@ -378,16 +365,6 @@ namespace bigint
 			// add ((b_hi + b_lo) << n/2)
 			additer(dest_mid, dest_end, buff_begin, buff_s1, dest_mid, dest_end, false);
 			// 1 << n + ((a_hi + a_lo):n/2 + (b_hi + b_lo):n/2) << n/2 + (a_hi + a_lo):n/2 * (b_hi + b_lo):n/2 = (a_hi + a_lo) * (b_hi + b_lo) -> {buff[n..2n], c} : n + 1
-
-#if debugprint
-			{
-				cout << "both carry" << endl;
-				if (Nil.data.size() != 1)
-				{
-					throw runtime_error("help!");
-				}
-			}
-#endif
 		}
 		else
 		{
@@ -399,64 +376,17 @@ namespace bigint
 				// We add the (<< n/2) term of this product here
 				additer(dest_mid, dest_end, buff_begin, buff_s1, dest_mid, dest_end, false);
 				// ((a_hi + a_lo):n/2 + 1 << n/2) * (b_hi + b_lo):n/2 = (b_hi + b_lo):n/2 << n/2 + (a_hi + a_lo):n/2 * (b_hi + b_lo):n/2
-
-#if debugprint
-				{
-					cout << "a carry" << endl;
-				}
-#endif
 			}
 			if (b_carry)
 			{
 				// Same as above but other way around
 				additer(dest_mid, dest_end, buff_s1, buff_q1, dest_mid, dest_end, false);
-
-#if debugprint
-				{
-					cout << "b carry" << endl;
-				}
-#endif
 			}
 		}
-
-#if debugprint
-		cout << "c = " << (int) *buff_q3 << endl;
-
-		cout << "head = " << (int)  *dest_q3 << endl;
-
-
-		for (auto p = dest_begin; p != dest_end; p++)
-		{
-			cout << (int) *p << ' ';
-		}
-		cout << endl;
-
-		for (auto p = buff_mid; p != buff_q3 + 1; p++)
-		{
-			cout << (int) *p << ' ';
-		}
-		cout << endl;
-
-#endif
-
-		//THIS SUBSTRACTION IS WHERE IT GOES WRONG
-
 
 		// Substract z0 and z2 from (a_hi * a_lo) * (b_hi * b_lo) to get z1
 		subiter(dest_q1, dest_end, buff_mid, buff_q3 + 1, dest_q1, dest_end, nullptr, false);
 		// z2 << n + z1 << n/2 + z0 -> dest : 2n
-
-#if debugprint
-		{
-
-			cout << "dest: " << 2 * n << " ={";
-			for (auto &&p = container::iterator{dest_begin}; p != dest_end; p++)
-			{
-				cout << hex << (int)*p << ' ';
-			}
-			cout << "}" << endl;
-		}
-#endif
 
 		return;
 	}
@@ -542,6 +472,7 @@ namespace bigint
 		{
 			data.push_back(c);
 		}
+		remove_leading_zeros();
 	}
 
 	void dint::operator*=(const dint &a)
@@ -555,4 +486,12 @@ namespace bigint
 		t.operator*=(b);
 		return t;
 	}
+
+	dint operator*(base b, const dint &a)
+	{
+		dint t{a};
+		t.operator*=(b);
+		return t;
+	}
+
 }
