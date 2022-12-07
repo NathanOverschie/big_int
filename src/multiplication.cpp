@@ -189,6 +189,13 @@ namespace bigint
 
 		if (b_Nil)
 		{
+
+			// Clear dest
+			for (auto &p = dest_begin; p != dest_end; p++)
+			{
+				*p = 0;
+			}
+
 			cout << "dest: " << 2 * n << " ={";
 			for (auto &p = dest_begin; p != dest_end; p++)
 			{
