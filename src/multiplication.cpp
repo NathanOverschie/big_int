@@ -202,6 +202,10 @@ namespace bigint
 
 		if (n == 1)
 		{
+			// Base case: simple multiplication
+			// a : 1
+			// b : 1
+			// dest : 2
 			overflow_product(*big_begin, *small_begin, *dest_begin, *(dest_begin + 1));
 
 			cout << "dest: " << 2 << " ={";
@@ -213,28 +217,6 @@ namespace bigint
 
 			return;
 		}
-
-		// if (n == 2)
-		// {
-		// 	// Base case: simple multiplication
-		// 	// a : 2
-		// 	// b : 2
-		// 	// dest : 4
-
-		// 	container a{*a_begin, *a_end};
-		// 	container b{*b_begin, *b_end};
-		// 	container dest(4);
-
-		// 	basicmult(move(a), move(b), dest);
-
-		// 	auto &&p = dest_0;
-		// 	for (int i = 0; i < 4; i++, p++)
-		// 	{
-		// 		*p = dest[i];
-		// 	}
-
-		// 	return;
-		// }
 
 		if (n % 2 == 1)
 		{
