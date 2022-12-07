@@ -162,6 +162,36 @@ bool testMultiplicationWithBase(std::mt19937 gen, size_t n)
 	return true;
 }
 
+namespace {
+		inline unsigned long long hi_n(unsigned long long x, int n)
+		{
+			return (x >> (n / 2)) & (1ULL << (n) - 1);
+		}
+
+		inline unsigned long long lo_n(unsigned long long x, int n)
+		{
+			return ((1ULL << (n / 2)) - 1) & x;
+		}
+
+		unsigned long long printzs(unsigned long long a, unsigned long long b, int bits){
+			cout << hex << a << endl;
+			cout << hex << b << endl;
+
+			if(bits == __CHAR_BIT__){
+				return;
+			}
+
+			unsigned long long z2, z1, z0, ret;
+
+			z2 = printzs(hi_n(a, bits), hi_n(b, bits), bits/2);
+			z0 = printzs(lo_n(a, bits), lo_n(b, bits), bits/2);
+
+			z1 = printzs(hi_n(a, bits) + lo_n(a, bits), hi_n(b, bits) + lo_n(b, bits), bits / 2) - z2 - z0;
+
+			ret = z2 << bits + z1 << bits/2 + z0;
+		}
+}
+
 bool testMultiplicationSimple(std::mt19937 gen, size_t n)
 {
 	std::uniform_int_distribution<unsigned long long> distriba(1UL << (sizeof(base) * __CHAR_BIT__ * 3), 1UL << (sizeof(base) * __CHAR_BIT__ * 4));
@@ -194,6 +224,7 @@ bool testMultiplicationSimple(std::mt19937 gen, size_t n)
 			cout << "ds: \t" << ds.toHexString() << endl;
 			cout << "s: \t" << dint{s}.toHexString() << endl;
 
+
 			return false;
 		}
 	}
@@ -209,45 +240,25 @@ int main(int argc, char const *argv[])
 	size_t n = 100000;
 
 	bool MultSimple = testMultiplicationSimple(gen, n);
-	bool Add = testAddition(gen, n);
-	bool Sub = testSubstraction(gen, n);
-	bool Mult = testMultiplication(gen, n);
-	bool MultWithBase = testMultiplicationWithBase(gen, n);
+	// bool Add = testAddition(gen, n);
+	// bool Sub = testSubstraction(gen, n);
+	// bool Mult = testMultiplication(gen, n);
+	// bool MultWithBase = testMultiplicationWithBase(gen, n);
 
-	if (Add)
-		cout << "Addition good" << endl;
+	// if (Add)
+	// 	cout << "Addition good" << endl;
 
-	if (Sub)
-		cout << "Substraction good" << endl;
+	// if (Sub)
+	// 	cout << "Substraction good" << endl;
 
-	if (Mult)
-		cout << "Multiplication good" << endl;
+	// if (Mult)
+	// 	cout << "Multiplication good" << endl;
 
-	if (MultWithBase)
-		cout << "Multiplication with base good" << endl;
+	// if (MultWithBase)
+	// 	cout << "Multiplication with base good" << endl;
 
 	if (MultSimple)
 		cout << "Multiplication with numbers of size of a power of 2 good" << endl;
-
-	// dint f = 1;
-	// int n = 1000;
-	// for (int i = 1; i <= n; ++i)
-	// {
-	// 	f *= dint{i};
-	// }
-
-	// cout << f.toHexString() << endl;
-
-	// dint x = {{0x23, 0x43, 0xf4, 0x21}};
-	// dint y = {{0xe3, 0xa4, 0x45, 0xaa}};
-
-	// dint z = x * y;
-
-	// cout << z.toHexString() << endl;
-	// 	f *= i;
-	// }
-	
-	// cout << f.toHexString() << endl;
 
 	return 0;
 }

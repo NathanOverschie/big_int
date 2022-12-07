@@ -306,29 +306,42 @@ namespace bigint
 		// if b_hi_empty then z2 = 0
 
 		// Calc z2
-		karatsuba(move(big_mid), move(big_end), move(small_mid), move(small_end), dest_mid, dest_end, buff_begin, buff_mid, n / 2);
+		karatsuba(big_mid, big_end, small_mid, small_end, dest_mid, dest_end, buff_begin, buff_mid, n / 2);
 		// z2 = a_hi * b_hi -> dest[n..] : n
 
 		// Calc z0
-		karatsuba(move(big_begin), move(big_mid), move(small_begin), move(small_mid), dest_begin, dest_mid, buff_begin, buff_mid, n / 2);
+		karatsuba(big_begin, big_mid, small_begin, small_mid, dest_begin, dest_mid, buff_begin, buff_mid, n / 2);
 		// z0 = a_lo * b_lo -> dest[..n] : n
 
 		// z2 << n + z0 -> dest
 
 		auto buff_s1 = buff_begin + n / 2;
-		auto buff_s2 = buff_s1 + n / 2;
+		auto buff_q1 = buff_begin + n;
+		auto buff_q3 = buff_mid + n;
 
-		bool a_carry = additer(move(big_mid), move(big_end), move(big_begin), move(big_mid), buff_s1, buff_s2, false);
+		bool a_carry = additer(move(big_mid), move(big_end), move(big_begin), move(big_mid), buff_s1, buff_q1, false);
 		// a_hi + a_lo -> buff[n/2..n] : n/2
 
 		bool b_carry = additer(move(small_begin), move(small_mid), move(small_mid), move(small_end), buff_begin, buff_s1, false);
 		// b_hi + b_lo -> buff[0..n/2] : n/2
 
-		karatsuba(move(buff_s1), move(buff_s2), move(buff_begin), move(buff_s1), buff_s2, buff_mid, buff_mid, buff_end, n / 2);
+		karatsuba(move(buff_s1), move(buff_q1), move(buff_begin), move(buff_s1), buff_q1, buff_mid, buff_mid, buff_end, n / 2);
 		// (a_hi + a_lo):n/2 * (b_hi + b_lo):n/2 -> buff[n..2n] : n
 		// Since (a_hi + a_lo) and (b_hi + b_lo) could have overflown we need to calculate the overflow of the product.
 
-		int c = 0;
+
+		if(additer(dest_begin, dest_mid, dest_mid, dest_end, buff_mid, buff_q3, false)){
+			*buff_q3 = base{1};
+		}else{
+			*buff_q3 = base{0};
+		}
+		// z0 + z2 -> buff[2n..3n+1] : n + 1
+		
+
+		auto dest_q1 = dest_begin + n / 2;
+		auto dest_q3 = dest_mid + n / 2;
+		additer(dest_q1, dest_end, buff_q1, buff_mid, dest_q1, dest_end, false);
+
 		if (a_carry && b_carry)
 		{
 			// Both (a_hi + a_lo) and (b_hi + b_lo) have overflown
@@ -337,11 +350,11 @@ namespace bigint
 			//		1 << n + ((a_hi + a_lo):n/2 + (b_hi + b_lo):n/2) << n/2 + (a_hi + a_lo):n/2 * (b_hi + b_lo):n/2
 			// We add the (<< n/2) term of this product here
 			// And c keeps track of the (<< n) term
-			c++;
-			if (additer(buff_s1, buff_s2, buff_s2 + n / 2, buff_s2 + n, buff_s2 + n / 2, buff_s2 + n, false))
-				c++;
-			if (additer(buff_begin, buff_s1, buff_s2 + n / 2, buff_s2 + n, buff_s2 + n / 2, buff_s2 + n, false))
-				c++;
+			additer(dest_q3, dest_end, Nil.data.begin(), Nil.data.end(), dest_q3, dest_end, true);
+			additer(dest_q1 + n/2, dest_end, buff_s1, buff_q1, dest_q1 + n/2, dest_end, false);
+			additer(dest_q1 + n/2, dest_end, buff_begin, buff_s1, dest_q1 + n/2, dest_end, false);
+
+			cout <<  "both carry" << endl;
 
 			// 1 << n + ((a_hi + a_lo):n/2 + (b_hi + b_lo):n/2) << n/2 + (a_hi + a_lo):n/2 * (b_hi + b_lo):n/2 = (a_hi + a_lo) * (b_hi + b_lo) -> {buff[n..2n], c} : n + 1
 		}
@@ -354,47 +367,23 @@ namespace bigint
 				// (a_hi + a_lo + 1 << n/2) * (b_hi + b_lo) = (b_hi + b_lo) << n/2 + (a_hi + a_lo) * (b_hi + b_lo)
 				// We add the (<< n/2) term of this product here
 				// And c keeps track of the (<< n) term
-				if (additer(buff_begin, buff_s1, buff_s2 + n / 2, buff_s2 + n, buff_s2 + n / 2, buff_s2 + n, false))
-					c++;
+
+				additer(dest_q1 + n/2, dest_end, buff_begin, buff_s1, dest_q1 + n/2, dest_end, false);
 				// ((a_hi + a_lo):n/2 + 1 << n/2) * (b_hi + b_lo):n/2 = (b_hi + b_lo):n/2 << n/2 + (a_hi + a_lo):n/2 * (b_hi + b_lo):n/2
+				cout << "a carry" << endl;
 			}
 			if (b_carry)
 			{
 				// Same as above but other way around
-				if (additer(buff_s1, buff_s2, buff_s2 + n / 2, buff_s2 + n, buff_s2 + n / 2, buff_s2 + n, false))
-					c++;
+				additer(dest_q1 + n/2, dest_end, buff_s1, buff_q1, dest_q1 + n/2, dest_end, false);
+
+				cout << "b carry" << endl;
 			}
 		}
 
 		// Substract z0 and z2 from (a_hi * a_lo) * (b_hi * b_lo) to get z1
-		if (subiter(buff_s2, buff_mid, dest_begin, dest_mid, buff_s2, buff_mid, nullptr, false))
-		{
-			c--;
-			cout << "\t\t\tunderflow" << endl;
-			// If there is underflow adjust the (<<n) term
-		}
-
-		if (subiter(buff_s2, buff_mid, dest_mid, dest_end, buff_s2, buff_mid, nullptr, false))
-		{
-			c--;
-			cout << "\t\t\tunderflow" << endl;
-			// If there is underflow adjust the (<<n) term
-		}
-
+		subiter(dest_q1, dest_end, buff_mid, buff_q3 + 1, dest_q1, dest_end, nullptr, false);
 		// z1 -> b : n
-
-		auto dest_q1 = dest_begin + n / 2;
-		auto dest_q3 = dest_mid + n / 2;
-
-		// Add z1 to dest[n/2..3n/2]
-		additer(dest_q1, dest_end, buff_s2, buff_mid, dest_q1, dest_end, false);
-		// z2 << n + z1 << n/2 + z0 -> dest
-
-		cout << "		count: " << dec << c << endl;
-		if (c == 1)
-		{
-			additer(dest_q3, dest_end, Nil.data.begin(), Nil.data.end(), dest_q3, dest_end, true);
-		}
 
 		cout << "dest: " << 2 * n << " ={";
 		for (auto &&p = container::iterator{dest_begin}; p != dest_end; p++)
@@ -438,12 +427,14 @@ namespace bigint
 		{
 			bt.resize(sa);
 			buff.resize(sa * 4);
+
 			mult(move(at.begin()), move(at.end()), move(bt.begin()), move(bt.end()), dest.begin(), dest.end(), move(buff.begin()), move(buff.end()));
 		}
 		else
 		{
 			at.resize(sb);
 			buff.resize(sb * 4);
+
 			mult(move(bt.begin()), move(bt.end()), move(at.begin()), move(at.end()), dest.begin(), dest.end(), move(buff.begin()), move(buff.end()));
 		}
 	}
