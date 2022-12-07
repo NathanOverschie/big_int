@@ -195,7 +195,7 @@ namespace {
 bool testMultiplicationSimple(std::mt19937 gen, size_t n)
 {
 	std::uniform_int_distribution<unsigned long long> distriba(1UL << (sizeof(base) * __CHAR_BIT__ * 3), 1UL << (sizeof(base) * __CHAR_BIT__ * 4));
-	std::uniform_int_distribution<unsigned long long> distribb(0, 1UL << (sizeof(base) * __CHAR_BIT__ * 4));
+	std::uniform_int_distribution<unsigned long long> distribb(0, 1UL << (sizeof(base) * __CHAR_BIT__ * 2));
 
 	unsigned long long a, b, s;
 
@@ -203,7 +203,7 @@ bool testMultiplicationSimple(std::mt19937 gen, size_t n)
 
 	for (size_t i = 0; i < n; i++)
 	{
-		a = distriba(gen);
+		a = distribb(gen);
 		b = distribb(gen);
 		s = a * b;
 
