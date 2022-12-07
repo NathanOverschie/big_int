@@ -285,6 +285,8 @@ namespace bigint
 		if (q != data.rend())
 		{
 			data.erase(q.base(), data.end());
+		}else{
+			data.resize(1);
 		}
 	}
 

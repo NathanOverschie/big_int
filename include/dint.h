@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <random>
 
-#define debugprint 1
+#define debugprint 0
 
 namespace bigint
 {

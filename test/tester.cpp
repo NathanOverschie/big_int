@@ -194,8 +194,7 @@ namespace {
 
 bool testMultiplicationSimple(std::mt19937 gen, size_t n)
 {
-	std::uniform_int_distribution<unsigned long long> distriba(1UL << (sizeof(base) * __CHAR_BIT__ * 3), 1UL << (sizeof(base) * __CHAR_BIT__ * 4));
-	std::uniform_int_distribution<unsigned long long> distribb(0, 1UL << (sizeof(base) * __CHAR_BIT__ * 2));
+	std::uniform_int_distribution<unsigned long long> distrib(0, (1UL << (sizeof(base) * __CHAR_BIT__ * 2)) - 1);
 
 	unsigned long long a, b, s;
 
@@ -203,15 +202,15 @@ bool testMultiplicationSimple(std::mt19937 gen, size_t n)
 
 	for (size_t i = 0; i < n; i++)
 	{
-		a = distribb(gen);
-		b = distribb(gen);
+		a = distrib(gen);
+		b = distrib(gen);
 		s = a * b;
 
 		da = dint(a);
 		db = dint(b);
 		ds = da * db;
 
-		cout << a << '*' << b << '=' << s << endl;
+		// cout << a << '*' << b << '=' << s << endl;
 
 		if (dint{s} != ds)
 		{
@@ -258,7 +257,18 @@ int main(int argc, char const *argv[])
 	// 	cout << "Multiplication with base good" << endl;
 
 	if (MultSimple)
-		cout << "Multiplication with numbers of size of a power of 2 good" << endl;
+		cout << "Multiplication with numbers of size 2 good" << endl;
+
+	// dint a{{0x0, 0x0}};
+	// dint b{{0x93, 0xc5}};
+
+	// dint x = a * b;
+
+
+	// cout << a.toHexString() << endl;
+	// cout << b.toHexString() << endl;
+	// cout << x.toHexString() << endl;
+
 
 	return 0;
 }
