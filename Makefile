@@ -2,12 +2,15 @@
 CC := g++ # This is the main compiler
 SRCDIR := src
 BUILDDIR := build
+BINDIR := bin
+INCDIR := include
 TESTDIR := test
 LIBNAME := bigint
-TARGET := bin/lib$(LIBNAME).so
+TARGET := $(BINDIR)/lib$(LIBNAME).so
 
  
 SRCEXT := cpp
+INCEXT := h
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
 
@@ -16,22 +19,22 @@ TESTOBJECTS := $(patsubst $(TESTDIR)/%,$(BUILDDIR)/%,$(TESTSOURCES:.$(SRCEXT)=.o
 
 CFLAGS := -g -Wall
 LIB := -L bin
-INC := -I include
+INC := -I $(INCDIR)
 RPATH := -Wl,-rpath ./bin
 
 $(TARGET): $(OBJECTS)
 	@echo " Linking..."
 	@echo " $(CC) -shared $^ -o $(TARGET) $(LIB)"; $(CC) -shared $^ -o $(TARGET) $(LIB)
 
-$(OBJECTS):$(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
+$(OBJECTS):$(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT) $(INCDIR)/*
 	@mkdir -p $(BUILDDIR)
 	@echo " $(CC) $(CFLAGS) -fpic $(INC) -c -o $@ $<"; $(CC) $(CFLAGS) -fpic $(INC) -c -o $@ $<
 
 clean:
 	@echo " Cleaning..."; 
-	@echo " $(RM) -r $(BUILDDIR) $(TARGET)"; $(RM) -r $(BUILDDIR) $(TARGET)
+	@echo " $(RM) -r $(BUILDDIR)/* $(BINDIR)/*"; $(RM) -r $(BUILDDIR)/* $(BINDIR)/*
 
-$(TESTOBJECTS):$(BUILDDIR)/%.o: $(TESTDIR)/%.$(SRCEXT)
+$(TESTOBJECTS):$(BUILDDIR)/%.o: $(TESTDIR)/%.$(SRCEXT) $(INCDIR)/*
 	@mkdir -p $(BUILDDIR)
 	@echo " $(CC) $(CFLAGS) $(INC) -c -o $@ $<"; $(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
