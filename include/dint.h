@@ -1,22 +1,10 @@
-#include <iostream>
-#include <iomanip>
-#include <vector>
-#include <deque>
-#include <queue>
-#include <string>
-#include <sstream>
-#include <list>
-#include <string>
-#include <algorithm>
-#include <random>
-
-#define debugprint 0
+#include "common.h"
 
 namespace bigint
 {
 	using namespace std;
 
-	typedef unsigned char base;
+	typedef unsigned long long base;
 	typedef vector<base> container;
 
 	constexpr unsigned short bits_per_word = sizeof(base) * __CHAR_BIT__;
