@@ -4,12 +4,12 @@ namespace bigint
 {
 
 	bool dint::additer(
-		container::const_iterator &&big_begin,
-		container::const_iterator &&big_end,
-		container::const_iterator &&small_begin,
-		container::const_iterator &&small_end,
-		container::iterator dest_begin,
-		container::iterator dest_end,
+		const container::const_iterator &big_begin,
+		const container::const_iterator &big_end,
+		const container::const_iterator &small_begin,
+		const container::const_iterator &small_end,
+		const container::iterator &dest_begin,
+		const container::iterator &dest_end,
 		const bool increment = false)
 	{
 
@@ -57,7 +57,7 @@ namespace bigint
 	 * @post{!increment => dest = big + small}
 	 * @post{increment => dest = big + small + 1}
 	 */
-	void dint::add(const container &&big, const container &&small, container &dest, const bool increment = false)
+	void dint::add(const container &big, const container &small, container &dest, const bool increment = false)
 	{
 		if (additer(big.cbegin(), big.cend(), small.cbegin(), small.cend(), dest.begin(), dest.end(), increment))
 		{
@@ -66,12 +66,12 @@ namespace bigint
 	}
 
 	bool dint::subiter(
-		container::const_iterator &&big_begin,
-		container::const_iterator &&big_end,
-		container::const_iterator &&small_begin,
-		container::const_iterator &&small_end,
-		container::iterator dest_begin,
-		container::iterator dest_end,
+		const container::const_iterator &big_begin,
+		const container::const_iterator &big_end,
+		const container::const_iterator &small_begin,
+		const container::const_iterator &small_end,
+		const container::iterator &dest_begin,
+		const container::iterator &dest_end,
 		container::iterator *pzeros,
 		const bool increment = false)
 	{
@@ -155,7 +155,7 @@ namespace bigint
 	 * @post{!increment => dest = big - small}
 	 * @post{increment => dest = big - small - 1}
 	 */
-	void dint::sub(const container &&big, const container &&small, container &dest, const bool increment = false)
+	void dint::sub(const container &big, const container &small, container &dest, const bool increment = false)
 	{
 		container::iterator *pzero = new container::iterator{};
 

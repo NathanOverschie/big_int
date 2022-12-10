@@ -285,12 +285,15 @@ namespace bigint
 		if (q != data.rend())
 		{
 			data.erase(q.base(), data.end());
-		}else{
+		}
+		else
+		{
 			data.resize(1);
 		}
 	}
 
-	void dint::random(int size, std::uniform_int_distribution<base> distr, std::mt19937 gen){
+	void dint::random(int size, std::uniform_int_distribution<base> distr, std::mt19937 gen)
+	{
 		data.resize(size);
 
 		for (auto &i : data)

@@ -88,21 +88,20 @@ namespace bigint
 		container data{0};
 		bool negative{false};
 
+		void add_zeros(int n) const;
 
 		void remove_leading_zeros();
 
 		void shiftwordsright(size_t);
 		void shiftwordsleft(size_t);
 
-		static void mult(const container &&a, const container &&b, container &dest);
-		static void mult(container::iterator &&a_begin, container::iterator &&a_end, container::iterator &&b_begin, container::iterator &&b_end, container::iterator dest_begin, container::iterator dest_end, container::iterator &&buff_begin, container::iterator &&buff_end);
-		static void karatsuba(const container::iterator &, const container::iterator &, const container::iterator &, const container::iterator &, container::iterator, container::iterator, const container::iterator &, const container::iterator &, size_t);
+		static void karatsuba(const container::const_iterator &, const container::const_iterator &, const container::const_iterator &, const container::const_iterator &, container::iterator, container::iterator, const container::iterator &, const container::iterator &, size_t);
 
-		static void add(const container &&a, const container &&b, container &dest, const bool incr);
-		static bool additer(container::const_iterator &&, container::const_iterator &&, container::const_iterator &&, container::const_iterator &&, container::iterator, container::iterator, const bool);
+		static void add(const container &a, const container &b, container &dest, const bool incr);
+		static bool additer(const container::const_iterator &, const container::const_iterator &, const container::const_iterator &, const container::const_iterator &, const container::iterator &, const container::iterator &, const bool);
 
-		static void sub(const container &&a, const container &&b, container &dest, const bool incr);
-		static bool subiter(container::const_iterator &&, container::const_iterator &&, container::const_iterator &&, container::const_iterator &&, container::iterator, container::iterator, container::iterator *, const bool);
+		static void sub(const container &a, const container &b, container &dest, const bool incr);
+		static bool subiter(const container::const_iterator &, const container::const_iterator &, const container::const_iterator &, const container::const_iterator &, const container::iterator &, const container::iterator &, container::iterator *, const bool);
 
 		static bool absgrt(const dint &, const dint &);
 		static bool abslst(const dint &, const dint &);

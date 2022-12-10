@@ -220,7 +220,7 @@ int main(int argc, char const *argv[])
 			a.random(size, distrib, gen);
 			b.random(size, distrib, gen);
 
-			naivemult(a, b);
+			a*b;
 		}
 
 		auto stop = chrono::high_resolution_clock::now();

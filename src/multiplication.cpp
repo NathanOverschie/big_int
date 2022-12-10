@@ -93,8 +93,8 @@ namespace bigint
 	}
 
 	base basicmult(
-		const container::iterator &begin,
-		const container::iterator &end,
+		const container::const_iterator &begin,
+		const container::const_iterator &end,
 		base x,
 		const container::iterator &dest_begin,
 		const container::iterator &dest_end)
@@ -128,7 +128,7 @@ namespace bigint
 		return c;
 	}
 
-	base basicmult(container::iterator p, const container::iterator &end, base x)
+	base basicmult(container::iterator p, const container::const_iterator &end, base x)
 	{
 		base c, t;
 		base lo, hi;
@@ -174,10 +174,10 @@ namespace bigint
 	 * @pre{dest = 0}
 	 */
 	void dint::karatsuba(
-		const container::iterator &big_begin,
-		const container::iterator &big_end,
-		const container::iterator &small_begin,
-		const container::iterator &small_end,
+		const container::const_iterator &big_begin,
+		const container::const_iterator &big_end,
+		const container::const_iterator &small_begin,
+		const container::const_iterator &small_end,
 		container::iterator dest_begin,
 		container::iterator dest_end,
 		const container::iterator &buff_begin,
@@ -189,7 +189,7 @@ namespace bigint
 		// And the notation a : i means that a is i words long
 
 		bool b_Nil = true;
-		for (auto &&p = container::iterator{small_begin}; p != small_end; ++p)
+		for (auto &&p = container::const_iterator{small_begin}; p != small_end; ++p)
 		{
 			if (*p != 0)
 			{
@@ -270,7 +270,6 @@ namespace bigint
 			*(buff_s2 - 1) = basicmult(small_begin + 1, small_end, *big_begin, buff_s1, buff_s2 - 1);
 			// b_big * a_small -> buff[n+1..n+2] : n+1
 
-
 			// a_big * b_big << 2 + a_small * b_small -> dest
 
 			// Add a_(big * b_small + a_small * b_big) << 1 to dest
@@ -322,13 +321,13 @@ namespace bigint
 		auto buff_q1 = buff_begin + n;
 		auto buff_q3 = buff_mid + n;
 
-		bool a_carry = additer(move(big_mid), move(big_end), move(big_begin), move(big_mid), buff_s1, buff_q1, false);
+		bool a_carry = additer(big_mid, big_end, big_begin, big_mid, buff_s1, buff_q1, false);
 		// a_hi + a_lo -> buff[n/2..n] : n/2
 
-		bool b_carry = additer(move(small_begin), move(small_mid), move(small_mid), move(small_end), buff_begin, buff_s1, false);
+		bool b_carry = additer(small_begin, small_mid, small_mid, small_end, buff_begin, buff_s1, false);
 		// b_hi + b_lo -> buff[0..n/2] : n/2
 
-		karatsuba(move(buff_s1), move(buff_q1), move(buff_begin), move(buff_s1), buff_q1, buff_mid, buff_mid, buff_end, n / 2);
+		karatsuba(buff_s1, buff_q1, buff_begin, buff_s1, buff_q1, buff_mid, buff_mid, buff_end, n / 2);
 		// (a_hi + a_lo):n/2 * (b_hi + b_lo):n/2 -> buff[n..2n] : n
 		// Since (a_hi + a_lo) and (b_hi + b_lo) could have overflown we need to calculate the overflow of the product.
 
@@ -391,76 +390,66 @@ namespace bigint
 		return;
 	}
 
-	/**
-	 * @brief
-	 *
-	 * @param a_begin
-	 * @param a_end
-	 * @param b_begin
-	 * @param b_end
-	 * @param dest_begin
-	 * @param dest_end
-	 * @pre{dest.size() == a.size() + b.size()}
-	 */
-	void dint::mult(container::iterator &&a_begin, container::iterator &&a_end, container::iterator &&b_begin, container::iterator &&b_end, container::iterator dest_begin, container::iterator dest_end, container::iterator &&buff_begin, container::iterator &&buff_end)
-	{
-		size_t n = a_end - a_begin;
-
-		dint::karatsuba(move(a_begin), move(a_end), move(b_begin), move(b_end), dest_begin, dest_end, buff_begin, buff_end, n);
-	}
-
-	void dint::mult(const container &&a, const container &&b, container &dest)
-	{
-		size_t sa = a.size();
-		size_t sb = b.size();
-
-		container at{a};
-		container bt{b};
-
-		container buff;
-
-		if (sa >= sb)
-		{
-			bt.resize(sa);
-			buff.resize(sa * 4);
-
-			mult(move(at.begin()), move(at.end()), move(bt.begin()), move(bt.end()), dest.begin(), dest.end(), move(buff.begin()), move(buff.end()));
-		}
-		else
-		{
-			at.resize(sb);
-			buff.resize(sb * 4);
-
-			mult(move(bt.begin()), move(bt.end()), move(at.begin()), move(at.end()), dest.begin(), dest.end(), move(buff.begin()), move(buff.end()));
-		}
-	}
-
 	dint operator*(const dint &a, const dint &b)
 	{
+		static container buff{};
+		static size_t buff_size = 0;
+		static container::iterator buff_begin = buff.begin();
+		static container::iterator buff_end = buff.end();
+
 		dint res;
 
 		size_t sa = a.data.size();
 		size_t sb = b.data.size();
 
-		container at{a.data};
-		container bt{b.data};
+		dint &at = const_cast<dint &>(a);
+		dint &bt = const_cast<dint &>(b);
+
+		size_t n;
 
 		if (sa >= sb)
 		{
-			bt.resize(sa);
-			res.data = container(2 * sa);
+			n = sa;
+			bt.data.resize(n);
 		}
 		else
 		{
-			at.resize(sb);
-			res.data = container(2 * sb);
+			n = sb;
+			at.data.resize(n);
 		}
 
+		res.data = container(2 * n);
 		container &dest = res.data;
 
-		dint::mult(move(at), move(bt), dest);
+		if(4 * n > buff_size){
+			buff.resize(4 * n);
+			buff_size = 4 * n;
+			buff_begin = buff.begin();
+			buff_end = buff.end();
+		}else{
+			buff_begin = buff.begin();
+			buff_end = buff_begin + 4 * n;
+		}
+
+		auto a_begin = a.data.cbegin();
+		auto a_end = a.data.cend();
+		auto b_begin = b.data.cbegin();
+		auto b_end = b.data.cend();
+		auto dest_begin = dest.begin();
+		auto dest_end = dest.end();
+
+		dint::karatsuba(a_begin, a_end, b_begin, b_end, dest_begin, dest_end, buff_begin, buff_end, n);
 
 		res.remove_leading_zeros();
+
+		if (sa >= sb)
+		{
+			bt.remove_leading_zeros();
+		}
+		else
+		{
+			at.remove_leading_zeros();
+		}
 
 		return res;
 	}
@@ -475,7 +464,6 @@ namespace bigint
 		res.data.resize(a.size(), b.size());
 
 		basicmult(move(at), move(bt), res.data);
-
 
 		res.remove_leading_zeros();
 
