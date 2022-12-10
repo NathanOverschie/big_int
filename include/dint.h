@@ -62,6 +62,8 @@ namespace bigint
 		friend dint operator*(const dint &, const dint &);
 		friend dint operator*(const dint &, base);
 
+		friend dint naivemult(const dint &, const dint &);
+
 		void operator*=(const dint &);
 		void operator*=(base);
 
@@ -75,6 +77,8 @@ namespace bigint
 
 		bool neg() const;
 
+		void random(int size, std::uniform_int_distribution<base> distr, std::mt19937 gen);
+
 	private:
 		// data represents the integer in words of size base
 		// data.front() is the Least Significant Word
@@ -83,6 +87,7 @@ namespace bigint
 		// the most significant word is not 0 except if the total is 0
 		container data{0};
 		bool negative{false};
+
 
 		void remove_leading_zeros();
 

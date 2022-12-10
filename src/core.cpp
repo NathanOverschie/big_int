@@ -290,6 +290,15 @@ namespace bigint
 		}
 	}
 
+	void dint::random(int size, std::uniform_int_distribution<base> distr, std::mt19937 gen){
+		data.resize(size);
+
+		for (auto &i : data)
+		{
+			i = distr(gen);
+		}
+	}
+
 	/**
 	 * @brief Give a hex string representation of dint
 	 *

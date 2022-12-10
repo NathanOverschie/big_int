@@ -1,6 +1,7 @@
 #include <dint.h>
 
 #include <random>
+#include <chrono>
 #include <algorithm>
 
 using namespace bigint;
@@ -192,17 +193,43 @@ int main(int argc, char const *argv[])
 	std::random_device rd;	// Will be used to obtain a seed for the random number engine
 	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
 
-	size_t n = 1000000;
+	// testMultiplicationSimple(gen, n, 1);
+	// testMultiplicationSimple(gen, n, 2);
+	// testMultiplicationSimple(gen, n, 3);
+	// testMultiplicationSimple(gen, n, 4);
 
-	testMultiplicationSimple(gen, n, 1);
-	testMultiplicationSimple(gen, n, 2);
-	testMultiplicationSimple(gen, n, 3);
-	testMultiplicationSimple(gen, n, 4);
+	// testAddition(gen, n);
+	// testSubstraction(gen, n);
+	// testMultiplication(gen, n);
+	// testMultiplicationWithBase(gen, n);
 
-	testAddition(gen, n);
-	testSubstraction(gen, n);
-	testMultiplication(gen, n);
-	testMultiplicationWithBase(gen, n);
+	size_t n = 10000;
+
+	cout << "size\tmicro secs" << endl;
+
+	dint a, b;
+	
+	std::uniform_int_distribution<base> distrib(0, numeric_limits<base>::max());
+	for (int size = 1; size < 100; size++)
+	{
+
+		auto start = chrono::high_resolution_clock::now();
+
+		for (int i = 0; i < n; i++)
+		{
+			a.random(size, distrib, gen);
+			b.random(size, distrib, gen);
+
+			naivemult(a, b);
+		}
+
+		auto stop = chrono::high_resolution_clock::now();
+
+		auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
+
+		cout << size << "\t";
+		cout << duration.count() << endl;
+	}
 
 	return 0;
 }

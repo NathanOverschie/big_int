@@ -465,6 +465,23 @@ namespace bigint
 		return res;
 	}
 
+	dint naivemult(const dint &a, const dint &b)
+	{
+		dint res;
+
+		container at{a.data};
+		container bt{b.data};
+
+		res.data.resize(a.size(), b.size());
+
+		basicmult(move(at), move(bt), res.data);
+
+
+		res.remove_leading_zeros();
+
+		return res;
+	}
+
 	void dint::operator*=(base x)
 	{
 		base c = basicmult(data.begin(), data.end(), x);

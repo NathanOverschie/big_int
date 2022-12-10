@@ -1,18 +1,28 @@
 #include "common.h"
+#include "dint.h"
 
-class bigint
+namespace bigint
 {
-private:
-    /* data */
-public:
-    bigint(/* args */);
-    ~bigint();
-};
+    class bigint
+    {
+    public:
+        bigint();
+        ~bigint();
 
-bigint::bigint(/* args */)
-{
-}
+    private:
+        union rep
+        {
+            dint dint;
+            base base = 0;
+        };
+    };
 
-bigint::~bigint()
-{
+    bigint::bigint(/* args */)
+    {
+    }
+
+    bigint::~bigint()
+    {
+    }
+
 }
