@@ -312,13 +312,12 @@ namespace bigint
 		ostringstream r{};
 
 		r << (negative ? '-' : ' ');
+		
 
-		vector<base> v{data};
-
-		for (size_t i = v.size(); i != 0; i--)
+		for (auto p = data.crbegin(); p != data.crend(); p++)
 		{
 			r << hex << setw(sizeof(base) * 2) << setfill('0');
-			r << static_cast<unsigned long long>(v[i - 1]);
+			r << static_cast<unsigned long long>(*p);
 			r << ' ';
 		}
 

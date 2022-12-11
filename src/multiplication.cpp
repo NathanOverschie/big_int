@@ -1,9 +1,14 @@
 #include "dint.h"
 
+constexpr size_t cutoff = 100; //Empirically tested
+
 namespace bigint
 {
+
 	namespace
 	{
+		constexpr base mask_low = ((1ULL << (bits_per_word / 2)) - 1);
+
 		inline base hi(base x)
 		{
 			return x >> (bits_per_word / 2);
@@ -11,7 +16,7 @@ namespace bigint
 
 		inline base lo(base x)
 		{
-			return ((1ULL << (bits_per_word / 2)) - 1) & x;
+			return mask_low & x;
 		}
 
 		inline void overflow_product(base a, base b, base &out_lo, base &out_hi)
@@ -48,16 +53,12 @@ namespace bigint
 		 * @pre{dest.size = a.size + b.size}
 		 */
 		void basicmult(
-			const container &&a,
-			const container &&b,
+			const container &a,
+			const container &b,
 			container &dest)
 		{
 			size_t sa = a.size();
 			size_t sb = b.size();
-			for (auto &&i : dest)
-			{
-				i = 0;
-			}
 
 			base c, t;
 			base lo, hi;
@@ -88,6 +89,52 @@ namespace bigint
 					c += hi;
 				}
 				dest[i + sb] = c;
+			}
+		}
+
+		void basicmult(
+			const container::const_iterator &a_begin,
+			const container::const_iterator &a_end,
+			const container::const_iterator &b_begin,
+			const container::const_iterator &b_end,
+			const container::iterator &dest_begin,
+			const container::iterator &dest_end)
+		{
+			size_t sa = a_end - a_begin;
+			size_t sb = b_end - b_begin;
+
+			base c, t;
+			base lo, hi;
+
+			container::const_iterator i,j;
+			container::iterator k,l;
+
+			for (i = a_begin, k = dest_begin; i != a_end; i++, k++)
+			{
+				c = 0;
+
+				for (j = b_begin, l = k; j != b_end; j++, l++)
+				{
+					// Seperate the carry from the remainder
+					overflow_product(*i, *j, lo, hi);
+
+					t = lo + c;
+
+					*l += t;
+					// Carry from the addition
+					if (t < lo)
+						c = 1;
+					else
+						c = 0;
+
+					// Carry from the addition
+					if (*l < t)
+						c++;
+
+					// Carry from the multiplication
+					c += hi;
+				}
+				*l = c;
 			}
 		}
 	}
@@ -210,13 +257,9 @@ namespace bigint
 			return;
 		}
 
-		if (n == 1)
+		if (n <= cutoff)
 		{
-			// Base case: simple multiplication
-			// a : 1
-			// b : 1
-			// dest : 2
-			overflow_product(*big_begin, *small_begin, *dest_begin, *(dest_begin + 1));
+			basicmult(big_begin, big_end, small_begin, small_end, dest_begin, dest_end);
 
 			return;
 		}
@@ -421,12 +464,15 @@ namespace bigint
 		res.data = container(2 * n);
 		container &dest = res.data;
 
-		if(4 * n > buff_size){
+		if (4 * n > buff_size)
+		{
 			buff.resize(4 * n);
 			buff_size = 4 * n;
 			buff_begin = buff.begin();
 			buff_end = buff.end();
-		}else{
+		}
+		else
+		{
 			buff_begin = buff.begin();
 			buff_end = buff_begin + 4 * n;
 		}
@@ -458,12 +504,9 @@ namespace bigint
 	{
 		dint res;
 
-		container at{a.data};
-		container bt{b.data};
+		res.data.resize(a.size() + b.size());
 
-		res.data.resize(a.size(), b.size());
-
-		basicmult(move(at), move(bt), res.data);
+		basicmult(a.data.cbegin(), a.data.cend(), b.data.cbegin(), b.data.cend(), res.data.begin(), res.data.end());
 
 		res.remove_leading_zeros();
 

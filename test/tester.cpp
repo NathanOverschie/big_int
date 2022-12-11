@@ -203,7 +203,7 @@ int main(int argc, char const *argv[])
 	// testMultiplication(gen, n);
 	// testMultiplicationWithBase(gen, n);
 
-	size_t n = 10000;
+	size_t n = 1000;
 
 	cout << "size\tmicro secs" << endl;
 
