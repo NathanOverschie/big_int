@@ -193,7 +193,6 @@ int main(int argc, char const *argv[])
 	std::random_device rd;	// Will be used to obtain a seed for the random number engine
 	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
 
-	size_t n = 1000;
 
 	// testMultiplicationSimple(gen, n, 1);
 	// testMultiplicationSimple(gen, n, 2);
@@ -212,18 +211,22 @@ int main(int argc, char const *argv[])
 
 	dint a, b, dest;
 	
+	size_t n = 50;
+	
 	std::uniform_int_distribution<base> distrib(0, numeric_limits<base>::max());
-	for (int size = 1; size < 100; size++)
+	for (int size = 1; size < 500; size++)
 	{
+
+		a.random(size, distrib, gen);
+		b.random(size, distrib, gen);
 
 		auto start = chrono::high_resolution_clock::now();
 
 		for (int i = 0; i < n; i++)
 		{
-			a.random(size, distrib, gen);
-			b.random(size, distrib, gen);
-
 			mult(a, b, dest);
+			++a;
+			++b;
 		}
 
 		auto stop = chrono::high_resolution_clock::now();
