@@ -62,7 +62,7 @@ namespace bigint
 		friend dint operator*(const dint &, const dint &);
 		friend dint operator*(const dint &, base);
 
-		friend dint naivemult(const dint &, const dint &);
+		friend void mult(const dint &, const dint &, dint &);
 
 		void operator*=(const dint &);
 		void operator*=(base);
@@ -87,8 +87,6 @@ namespace bigint
 		// the most significant word is not 0 except if the total is 0
 		container data{0};
 		bool negative{false};
-
-		void add_zeros(int n) const;
 
 		void remove_leading_zeros();
 

@@ -23,7 +23,7 @@ namespace bigint
 		base c = increment ? 1 : 0;
 
 		// First part of calculation, both numbers contribute to the result
-		for (; psmall != small_end; pbig++, psmall++, pdest++)
+		for (; psmall != small_end; ++pbig, ++psmall, ++pdest)
 		{
 
 			t = *pbig;
@@ -34,7 +34,7 @@ namespace bigint
 		bool self{big_begin == dest_begin};
 
 		// Second part of the calculation, only one number contributes to the result
-		for (; pbig != big_end && (c == 1 || !self); pbig++, pdest++)
+		for (; pbig != big_end && (c == 1 || !self); ++pbig, ++pdest)
 		{
 
 			*pdest = *pbig + c;
@@ -89,7 +89,7 @@ namespace bigint
 		base c = increment ? 1 : 0;
 
 		// First part of calculation, both numbers contribute to the result
-		for (; psmall != small_end; pbig++, psmall++, pdest++)
+		for (; psmall != small_end; ++pbig, ++psmall, ++pdest)
 		{
 			t = *pbig;
 			*pdest = *pbig - *psmall - c;
@@ -116,7 +116,7 @@ namespace bigint
 		bool self{big_begin == dest_begin};
 
 		// Second part of the calculation, only one number contributes to the result
-		for (; pbig != big_end && (c == 1 || !self); pbig++, pdest++)
+		for (; pbig != big_end && (c == 1 || !self); ++pbig, ++pdest)
 		{
 			t = *pdest;
 			*pdest -= c;

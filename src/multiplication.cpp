@@ -1,141 +1,86 @@
 #include "dint.h"
 
-constexpr size_t cutoff = 100; //Empirically tested
+constexpr size_t cutoff = 12; // Empirically tested
 
 namespace bigint
 {
+	constexpr base mask_low = ((1ULL << (bits_per_word / 2)) - 1);
 
-	namespace
+	inline base hi(base x)
 	{
-		constexpr base mask_low = ((1ULL << (bits_per_word / 2)) - 1);
+		return x >> (bits_per_word / 2);
+	}
 
-		inline base hi(base x)
+	inline base lo(base x)
+	{
+		return mask_low & x;
+	}
+
+	inline void overflow_product(base a, base b, base &out_lo, base &out_hi)
+	{
+		base s0, s1, s2, s3;
+
+		base x = lo(a) * lo(b);
+		s0 = lo(x);
+
+		x = hi(a) * lo(b) + hi(x);
+		s1 = lo(x);
+		s2 = hi(x);
+
+		x = s1 + lo(a) * hi(b);
+		s1 = lo(x);
+
+		x = s2 + hi(a) * hi(b) + hi(x);
+		s2 = lo(x);
+		s3 = hi(x);
+
+		out_lo = (s1 << bits_per_word / 2) | s0;
+		out_hi = (s3 << bits_per_word / 2) | s2;
+	}
+
+	void basicmult(
+		const container::const_iterator &a_begin,
+		const container::const_iterator &a_end,
+		const container::const_iterator &b_begin,
+		const container::const_iterator &b_end,
+		const container::iterator &dest_begin,
+		const container::iterator &dest_end)
+	{
+		size_t sa = a_end - a_begin;
+		size_t sb = b_end - b_begin;
+
+		base c, t;
+		base lo, hi;
+
+		container::const_iterator i, j;
+		container::iterator k, l;
+
+		for (i = a_begin, k = dest_begin; i != a_end; ++i, ++k)
 		{
-			return x >> (bits_per_word / 2);
-		}
+			c = 0;
 
-		inline base lo(base x)
-		{
-			return mask_low & x;
-		}
-
-		inline void overflow_product(base a, base b, base &out_lo, base &out_hi)
-		{
-			base s0, s1, s2, s3;
-
-			base x = lo(a) * lo(b);
-			s0 = lo(x);
-
-			x = hi(a) * lo(b) + hi(x);
-			s1 = lo(x);
-			s2 = hi(x);
-
-			x = s1 + lo(a) * hi(b);
-			s1 = lo(x);
-
-			x = s2 + hi(a) * hi(b) + hi(x);
-			s2 = lo(x);
-			s3 = hi(x);
-
-			out_lo = (s1 << bits_per_word / 2) | s0;
-			out_hi = (s3 << bits_per_word / 2) | s2;
-		}
-
-		/**
-		 * @brief
-		 *
-		 * @param a_begin
-		 * @param a_end
-		 * @param b_begin
-		 * @param b_end
-		 * @param dest_begin
-		 * @param dest_end
-		 * @pre{dest.size = a.size + b.size}
-		 */
-		void basicmult(
-			const container &a,
-			const container &b,
-			container &dest)
-		{
-			size_t sa = a.size();
-			size_t sb = b.size();
-
-			base c, t;
-			base lo, hi;
-
-			for (size_t i = 0; i < sa; i++)
+			for (j = b_begin, l = k; j != b_end; ++j, ++l)
 			{
-				c = 0;
+				// Seperate the carry from the remainder
+				overflow_product(*i, *j, lo, hi);
 
-				for (size_t j = 0; j < sb; j++)
-				{
-					// Seperate the carry from the remainder
-					overflow_product(a[i], b[j], lo, hi);
+				t = lo + c;
 
-					t = lo + c;
+				*l += t;
+				// Carry from the addition
+				if (t < lo)
+					c = 1;
+				else
+					c = 0;
 
-					dest[i + j] += t;
-					// Carry from the addition
-					if (t < lo)
-						c = 1;
-					else
-						c = 0;
+				// Carry from the addition
+				if (*l < t)
+					c++;
 
-					// Carry from the addition
-					if (dest[i + j] < t)
-						c++;
-
-					// Carry from the multiplication
-					c += hi;
-				}
-				dest[i + sb] = c;
+				// Carry from the multiplication
+				c += hi;
 			}
-		}
-
-		void basicmult(
-			const container::const_iterator &a_begin,
-			const container::const_iterator &a_end,
-			const container::const_iterator &b_begin,
-			const container::const_iterator &b_end,
-			const container::iterator &dest_begin,
-			const container::iterator &dest_end)
-		{
-			size_t sa = a_end - a_begin;
-			size_t sb = b_end - b_begin;
-
-			base c, t;
-			base lo, hi;
-
-			container::const_iterator i,j;
-			container::iterator k,l;
-
-			for (i = a_begin, k = dest_begin; i != a_end; i++, k++)
-			{
-				c = 0;
-
-				for (j = b_begin, l = k; j != b_end; j++, l++)
-				{
-					// Seperate the carry from the remainder
-					overflow_product(*i, *j, lo, hi);
-
-					t = lo + c;
-
-					*l += t;
-					// Carry from the addition
-					if (t < lo)
-						c = 1;
-					else
-						c = 0;
-
-					// Carry from the addition
-					if (*l < t)
-						c++;
-
-					// Carry from the multiplication
-					c += hi;
-				}
-				*l = c;
-			}
+			*l = c;
 		}
 	}
 
@@ -162,34 +107,6 @@ namespace bigint
 			t = lo + c;
 
 			*q = t;
-			// Carry from the addition
-			if (t < lo)
-				c = 1;
-			else
-				c = 0;
-
-			// Carry from the multiplication
-			c += hi;
-		}
-
-		return c;
-	}
-
-	base basicmult(container::iterator p, const container::const_iterator &end, base x)
-	{
-		base c, t;
-		base lo, hi;
-
-		c = 0;
-		for (; p != end; ++p)
-		{
-			// Seperate the carry from the remainder
-			overflow_product(*p, x, lo, hi);
-
-			// Remainder
-			t = lo + c;
-
-			*p = t;
 			// Carry from the addition
 			if (t < lo)
 				c = 1;
@@ -433,14 +350,19 @@ namespace bigint
 		return;
 	}
 
-	dint operator*(const dint &a, const dint &b)
-	{
+	/**
+	 * @brief multiplies a and b together and stores the result in dest.
+	 * 
+	 * @param a 
+	 * @param b 
+	 * @param dest 
+	 */
+	void mult(const dint &a, const dint &b, dint &dest){
+
 		static container buff{};
 		static size_t buff_size = 0;
 		static container::iterator buff_begin = buff.begin();
 		static container::iterator buff_end = buff.end();
-
-		dint res;
 
 		size_t sa = a.data.size();
 		size_t sb = b.data.size();
@@ -461,8 +383,7 @@ namespace bigint
 			at.data.resize(n);
 		}
 
-		res.data = container(2 * n);
-		container &dest = res.data;
+		dest.data.resize(2 * n);
 
 		if (4 * n > buff_size)
 		{
@@ -481,51 +402,27 @@ namespace bigint
 		auto a_end = a.data.cend();
 		auto b_begin = b.data.cbegin();
 		auto b_end = b.data.cend();
-		auto dest_begin = dest.begin();
-		auto dest_end = dest.end();
+		auto dest_begin = dest.data.begin();
+		auto dest_end = dest.data.end();
 
 		dint::karatsuba(a_begin, a_end, b_begin, b_end, dest_begin, dest_end, buff_begin, buff_end, n);
 
-		res.remove_leading_zeros();
-
-		if (sa >= sb)
-		{
+		if(sa >= sb){
 			bt.remove_leading_zeros();
-		}
-		else
-		{
+		}else{
 			at.remove_leading_zeros();
 		}
 
-		return res;
+		dest.remove_leading_zeros();
 	}
 
-	dint naivemult(const dint &a, const dint &b)
+	dint operator*(const dint &a, const dint &b)
 	{
 		dint res;
 
-		res.data.resize(a.size() + b.size());
-
-		basicmult(a.data.cbegin(), a.data.cend(), b.data.cbegin(), b.data.cend(), res.data.begin(), res.data.end());
-
-		res.remove_leading_zeros();
+		mult(a, b, res);
 
 		return res;
-	}
-
-	void dint::operator*=(base x)
-	{
-		base c = basicmult(data.begin(), data.end(), x);
-		if (c != 0)
-		{
-			data.push_back(c);
-		}
-		remove_leading_zeros();
-	}
-
-	void dint::operator*=(const dint &a)
-	{
-		*this = (*this * a);
 	}
 
 	dint operator*(const dint &a, base b)
@@ -542,4 +439,18 @@ namespace bigint
 		return t;
 	}
 
+	void dint::operator*=(const dint &a)
+	{
+		*this = (*this * a);
+	}
+
+	void dint::operator*=(base x)
+	{
+		base c = basicmult(data.cbegin(), data.cend(), x, data.begin(), data.end());
+		if (c != 0)
+		{
+			data.push_back(c);
+		}
+		remove_leading_zeros();
+	}
 }

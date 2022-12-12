@@ -312,7 +312,6 @@ namespace bigint
 		ostringstream r{};
 
 		r << (negative ? '-' : ' ');
-		
 
 		for (auto p = data.crbegin(); p != data.crend(); p++)
 		{
