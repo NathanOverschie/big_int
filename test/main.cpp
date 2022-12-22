@@ -206,12 +206,9 @@ int main(int argc, char const *argv[])
 	// testMultiplication(gen, n);
 	// testMultiplicationWithBase(gen, n);
 
-
-	cout << "size\tmicro secs" << endl;
-
 	dint a, b, dest;
 	
-	size_t n = 50;
+	size_t n = 200;
 	
 	std::uniform_int_distribution<base> distrib(0, numeric_limits<base>::max());
 	for (int size = 1; size < 500; size++)
@@ -233,7 +230,6 @@ int main(int argc, char const *argv[])
 
 		auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
 
-		cout << size << "\t";
 		cout << duration.count() << endl;
 	}
 

@@ -15,7 +15,8 @@ SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
 
 TESTSOURCES := $(shell find $(TESTDIR) -type f -name *.$(SRCEXT))
-TESTOBJECTS := $(patsubst $(TESTDIR)/%,$(BUILDDIR)/%,$(TESTSOURCES:.$(SRCEXT)=.o))
+TESTOBJECTS := $(patsubst $(TESTDIR)/%,$(BUILDDIR)/%,$(TESTSOURCES:.$(SRCEXT)=.testo))
+TESTS := $(patsubst $(TESTDIR)/%,$(BINDIR)/%,$(TESTSOURCES:.$(SRCEXT)=.test))
 
 CFLAGS := -g -Wall
 LIB := -L bin
@@ -23,24 +24,29 @@ INC := -I $(INCDIR)
 RPATH := -Wl,-rpath ./bin
 
 $(TARGET): $(OBJECTS)
-	@echo " Linking..."
-	@echo " $(CC) -shared $^ -o $(TARGET) $(LIB)"; $(CC) -shared $^ -o $(TARGET) $(LIB)
+	@echo "\n\t\tLinking...\n\n"
+	$(CC) -shared $^ -o $(TARGET) $(LIB)
 
 $(OBJECTS):$(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT) $(INCDIR)/*
+	@echo "\n\t\tCompiling $*\n\n"
 	@mkdir -p $(BUILDDIR)
-	@echo " $(CC) $(CFLAGS) -fpic $(INC) -c -o $@ $<"; $(CC) $(CFLAGS) -fpic $(INC) -c -o $@ $<
+	$(CC) $(CFLAGS) -fpic $(INC) -c -o $@ $<
 
 clean:
 	@echo " Cleaning..."; 
-	@echo " $(RM) -r $(BUILDDIR)/* $(BINDIR)/*"; $(RM) -r $(BUILDDIR)/* $(BINDIR)/*
+	$(RM) -r $(BUILDDIR)/* $(BINDIR)/*
 
-$(TESTOBJECTS):$(BUILDDIR)/%.o: $(TESTDIR)/%.$(SRCEXT) $(INCDIR)/*
-	@mkdir -p $(BUILDDIR)
-	@echo " $(CC) $(CFLAGS) $(INC) -c -o $@ $<"; $(CC) $(CFLAGS) $(INC) -c -o $@ $<
+$(TESTOBJECTS):$(BUILDDIR)/%.testo: $(TESTDIR)/%.$(SRCEXT) $(INCDIR)/*
+	@echo "\n\t\tCompiling test $*\n\n"
+	mkdir -p $(BUILDDIR)
+	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
 # Tests
-bin/tester: $(TESTOBJECTS) $(TARGET)
-	$(CC) $(CFLAGS) $(TESTOBJECTS) -l$(LIBNAME) $(INC) $(LIB) $(RPATH) -o bin/tester
+$(TESTS):$(BINDIR)/%.test: $(BUILDDIR)/%.testo $(TARGET)
+	@echo "\n\t\tLinking tests...\n\n"
+	$(CC) $(CFLAGS) $< -l$(LIBNAME) $(INC) $(LIB) $(RPATH) -o $@
 
+
+test: $(TESTS)
 
 .PHONY: clean
