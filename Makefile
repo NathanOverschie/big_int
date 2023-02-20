@@ -18,7 +18,7 @@ TESTSOURCES := $(shell find $(TESTDIR) -type f -name *.$(SRCEXT))
 TESTOBJECTS := $(patsubst $(TESTDIR)/%,$(BUILDDIR)/%,$(TESTSOURCES:.$(SRCEXT)=.testo))
 TESTS := $(patsubst $(TESTDIR)/%,$(BINDIR)/%,$(TESTSOURCES:.$(SRCEXT)=.test))
 
-CFLAGS := -g -Wall
+CFLAGS := -g -Wall -std=c++20
 LIB := -L bin
 INC := -I $(INCDIR)
 RPATH := -Wl,-rpath ./bin
