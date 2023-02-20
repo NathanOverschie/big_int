@@ -317,7 +317,7 @@ namespace bigint
 			// (a_hi + a_lo):n/2 * (b_hi + b_lo):n/2 -> buff[n..2n] : n
 			// We need to add the other terms in the equation above
 			// We add the (1 << n) here
-			additer(dest_q3, dest_end, Nil.data.begin(), Nil.data.end(), dest_q3, dest_end, true);
+			additer(static_cast<const_iterator>(dest_q3), static_cast<const_iterator>(dest_end), Nil.data.begin(), Nil.data.end(), dest_q3, dest_end, true);
 			// We add the (<< n/2) term of this product here
 			// add ((a_hi + a_lo) << n/2)
 			additer(dest_mid, dest_end, buff_s1, buff_q1, dest_mid, dest_end, false);
@@ -344,7 +344,7 @@ namespace bigint
 		}
 
 		// Substract z0 and z2 from (a_hi * a_lo) * (b_hi * b_lo) to get z1
-		subiter(dest_q1, dest_end, buff_mid, buff_q3 + 1, dest_q1, dest_end, nullptr, false);
+		subiter(static_cast<const_iterator>(dest_q1), static_cast<const_iterator>(dest_end), static_cast<const_iterator>(buff_mid), static_cast<const_iterator>(buff_q3 + 1), static_cast<iterator>(dest_q1), static_cast<iterator>(dest_end), static_cast<iterator*>(nullptr), false);
 		// z2 << n + z1 << n/2 + z0 -> dest : 2n
 
 		return;

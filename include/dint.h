@@ -1,109 +1,113 @@
 #include "common.h"
+#include "bigint.h"
 
 namespace bigint
 {
-	using namespace std;
+using namespace std;
 
-	typedef unsigned long long base;
-	typedef vector<base> container;
+using base		= unsigned long long;
+using container = vector<base>;
 
-	constexpr unsigned short bits_per_word = sizeof(base) * __CHAR_BIT__;
+using iterator		 = container::iterator;
+using const_iterator = container::const_iterator;
 
-	class dint
-	{
-	public:
-		dint() = default;
-		dint(const dint &) = default;
-		dint(dint &&) = default;
-		dint(unsigned long long);
-		explicit dint(long long);
-		dint(const container &);
-		dint(container &&);
+constexpr unsigned short bits_per_word = sizeof(base) * __CHAR_BIT__;
 
-		~dint() = default;
+class dint : private bigint
+{
+  public:
+	dint()			   = default;
+	dint(const dint &) = default;
+	dint(dint &&)	   = default;
+	dint(unsigned long long);
+	explicit dint(long long);
+	dint(const container &);
+	dint(container &&);
 
-		dint &operator=(const dint &) = default;
-		dint &operator=(dint &&) = default;
+	~dint() = default;
 
-		bool operator!=(const dint &) const;
-		bool operator<=(const dint &) const;
-		bool operator>=(const dint &) const;
+	dint &operator=(const dint &) = default;
+	dint &operator=(dint &&)	  = default;
 
-		void operator+=(const dint &);
-		void operator+=(base);
+	bool operator!=(const dint &) const;
+	bool operator<=(const dint &) const;
+	bool operator>=(const dint &) const;
 
-		void operator-=(const dint &);
-		void operator-=(base);
+	void operator+=(const dint &);
+	void operator+=(base);
 
-		dint operator++(int);
-		dint &operator++();
+	void operator-=(const dint &);
+	void operator-=(base);
 
-		dint operator--(int);
-		dint &operator--();
+	dint operator++(int);
+	dint &operator++();
 
-		dint operator-() const;
+	dint operator--(int);
+	dint &operator--();
 
-		dint operator<<(unsigned int) const;
-		dint operator>>(unsigned int) const;
+	dint operator-() const;
 
-		dint &operator<<=(unsigned int);
-		dint &operator>>=(unsigned int);
+	dint operator<<(unsigned int) const;
+	dint operator>>(unsigned int) const;
 
-		friend dint operator+(const dint &, const dint &);
-		friend dint &operator+(const dint &, dint &&);
+	dint &operator<<=(unsigned int);
+	dint &operator>>=(unsigned int);
 
-		friend dint operator-(const dint &, const dint &);
-		friend dint &operator-(const dint &, dint &&);
+	friend dint operator+(const dint &, const dint &);
+	friend dint &operator+(const dint &, dint &&);
 
-		friend bool operator>(const dint &, const dint &);
-		friend bool operator<(const dint &, const dint &);
-		friend bool operator==(const dint &, const dint &);
+	friend dint operator-(const dint &, const dint &);
+	friend dint &operator-(const dint &, dint &&);
 
-		friend dint operator*(const dint &, const dint &);
-		friend dint operator*(const dint &, base);
+	friend bool operator>(const dint &, const dint &);
+	friend bool operator<(const dint &, const dint &);
+	friend bool operator==(const dint &, const dint &);
 
-		friend void mult(const dint &, const dint &, dint &);
+	friend dint operator*(const dint &, const dint &);
+	friend dint operator*(const dint &, base);
 
-		void operator*=(const dint &);
-		void operator*=(base);
+	friend void mult(const dint &, const dint &, dint &);
 
-		string toHexString() const;
+	void operator*=(const dint &);
+	void operator*=(base);
 
-		size_t size() const;
+	string toHexString() const;
 
-		base front() const;
+	size_t size() const;
 
-		base back() const;
+	base front() const;
 
-		bool neg() const;
+	base back() const;
 
-		void random(int size, std::uniform_int_distribution<base> distr, std::mt19937 gen);
+	bool neg() const;
 
-	private:
-		// data represents the integer in words of size base
-		// data.front() is the Least Significant Word
-		// data.back() is the Most Significant Word
-		// data has at least size 1
-		// the most significant word is not 0 except if the total is 0
-		container data{0};
-		bool negative{false};
+	void random(int size, std::uniform_int_distribution<base> distr, std::mt19937 gen);
 
-		void remove_leading_zeros();
+  private:
+	// data represents the integer in words of size base
+	// data.front() is the Least Significant Word
+	// data.back() is the Most Significant Word
+	// data has at least size 1
+	// the most significant word is not 0 except if the total is 0
+	container data{0};
+	bool negative{false};
 
-		void shiftwordsright(size_t);
-		void shiftwordsleft(size_t);
+	void remove_leading_zeros();
 
-		static void karatsuba(const container::const_iterator &, const container::const_iterator &, const container::const_iterator &, const container::const_iterator &, container::iterator, container::iterator, const container::iterator &, const container::iterator &, size_t);
+	void shiftwordsright(size_t);
+	void shiftwordsleft(size_t);
 
-		static void add(const container &a, const container &b, container &dest, const bool incr);
-		static bool additer(const container::const_iterator &, const container::const_iterator &, const container::const_iterator &, const container::const_iterator &, const container::iterator &, const container::iterator &, const bool);
+	static void karatsuba(const const_iterator &, const const_iterator &, const const_iterator &,
+						  const const_iterator &, iterator, iterator, const iterator &, const iterator &, size_t);
 
-		static void sub(const container &a, const container &b, container &dest, const bool incr);
-		static bool subiter(const container::const_iterator &, const container::const_iterator &, const container::const_iterator &, const container::const_iterator &, const container::iterator &, const container::iterator &, container::iterator *, const bool);
+	static void add(const container &a, const container &b, container &dest, const bool incr);
 
-		static bool absgrt(const dint &, const dint &);
-		static bool abslst(const dint &, const dint &);
-	};
+	static void sub(const container &a, const container &b, container &dest, const bool incr);
 
-	extern const dint &Nil;
-}
+	static bool absgrt(const dint &, const dint &);
+	static bool abslst(const dint &, const dint &);
+};
+
+extern const dint &Nil;
+
+} // namespace bigint
