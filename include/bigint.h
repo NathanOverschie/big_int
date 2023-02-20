@@ -1,28 +1,17 @@
 #include "common.h"
-#include "dint.h"
 
 namespace bigint
 {
-    class bigint
-    {
-    public:
-        bigint();
-        ~bigint();
+class bigint
+{
+  public:
+	template <class const_iterator, class iterator>
+		requires std::input_iterator<const_iterator> && std::forward_iterator<iterator>
+	static bool additer(const const_iterator &, const const_iterator &, const const_iterator &, const const_iterator &,
+						const iterator &, const iterator &, const bool = false);
 
-    private:
-        union rep
-        {
-            dint dint;
-            base base = 0;
-        };
-    };
-
-    bigint::bigint(/* args */)
-    {
-    }
-
-    bigint::~bigint()
-    {
-    }
-
-}
+	template <class const_iterator, class iterator>
+	static bool subiter(const const_iterator &, const const_iterator &, const const_iterator &, const const_iterator &,
+						const iterator &, const iterator &, iterator *, const bool = false);
+};
+} // namespace bigint
