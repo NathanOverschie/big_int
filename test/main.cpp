@@ -193,45 +193,17 @@ int main(int argc, char const *argv[])
 	std::random_device rd;	// Will be used to obtain a seed for the random number engine
 	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
 
-
-	// testMultiplicationSimple(gen, n, 1);
-	// testMultiplicationSimple(gen, n, 2);
-	// testMultiplicationSimple(gen, n, 3);
-	// testMultiplicationSimple(gen, n, 4);
-
-	// cout << "Multiplication good" << endl;
-
-	// testAddition(gen, n);
-	// testSubstraction(gen, n);
-	// testMultiplication(gen, n);
-	// testMultiplicationWithBase(gen, n);
-
-	dint a, b, dest;
-	
 	size_t n = 200;
-	
-	std::uniform_int_distribution<base> distrib(0, numeric_limits<base>::max());
-	for (int size = 1; size < 500; size++)
-	{
 
-		a.random(size, distrib, gen);
-		b.random(size, distrib, gen);
+	cout << testMultiplicationSimple(gen, n, 1);
+	cout << testMultiplicationSimple(gen, n, 2);
+	cout << testMultiplicationSimple(gen, n, 3);
+	cout << testMultiplicationSimple(gen, n, 4);
 
-		auto start = chrono::high_resolution_clock::now();
-
-		for (int i = 0; i < n; i++)
-		{
-			mult(a, b, dest);
-			++a;
-			++b;
-		}
-
-		auto stop = chrono::high_resolution_clock::now();
-
-		auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
-
-		cout << duration.count() << endl;
-	}
+	cout << testAddition(gen, n);
+	cout << testSubstraction(gen, n);
+	cout << testMultiplication(gen, n);
+	cout << testMultiplicationWithBase(gen, n);
 
 	return 0;
 }

@@ -5,7 +5,7 @@ namespace bigint
 {
 using namespace std;
 
-using base		= unsigned long long;
+using base		= unsigned char;
 using container = vector<base>;
 
 using iterator		 = container::iterator;
